@@ -282,11 +282,11 @@ export default function App() {
 
       // Retry every 5s while round is still unresolved; this covers clock drift and transient RPC delays.
       if (!ok && !cancelled) {
-        timeoutId = setTimeout(tryBackupResolve, 5000);
+        timeoutId = setTimeout(tryBackupResolve, 10000);
       }
     };
 
-    timeoutId = setTimeout(tryBackupResolve, 5000);
+    timeoutId = setTimeout(tryBackupResolve, 10000);
 
     return () => {
       cancelled = true;

@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server.ts",
+    "bot": "tsx scripts/bot.ts",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
