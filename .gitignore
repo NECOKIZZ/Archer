@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+
+.git_backup_*
+DBpass.txt
+
+.git_backup_*
+DBpass.txt
