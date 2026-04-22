@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blue Spin</title>
+    <script>
+      // Aggressive safe-guard for common window property collisions (Zerion, fetch, etc.)
+      (function() {
+        try {
+          const safeDefine = (prop, value) => {
+            try {
+              Object.defineProperty(window, prop, {
+                value: value,
+                writable: true,
+                configurable: true
+              });
+            } catch (e) {
+              // If already defined and non-configurable, we can't do much
+            }
+          };
+
+          // Pre-emptively define properties often hit by extensions
+          safeDefine('isZerion', true);
+          
+          // Specialized fix for window.fetch being a read-only getter in some environments
+          const originalFetch = window.fetch;
+          try {
+            Object.defineProperty(window, 'fetch', {
+              get: function() { return originalFetch; },
+              set: function(v) { /* Ignore attempts to overwrite if locked */ },
+              configurable: true
+            });
+          } catch (e) {
+            // Fallback: if we can't redefine, we still have the error handler below
+          }
+
+          // Global error suppression for these specific known non-breaking issues
+          window.addEventListener('error', function(event) {
+            const msg = event.message || '';
+            if (msg.includes('isZerion') || msg.includes('property fetch')) {
+              event.stopImmediatePropagation();
+              event.preventDefault();
+              return true;
+            }
+          }, true);
+
+          // Handle unhandled rejections for the same reasons
+          window.addEventListener('unhandledrejection', function(event) {
+            const reason = event.reason && event.reason.message || '';
+            if (reason.includes('isZerion') || reason.includes('property fetch')) {
+              event.stopImmediatePropagation();
+              event.preventDefault();
+              return true;
+            }
+          }, true);
+        } catch (globalError) {
+          // Absolute fallback
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

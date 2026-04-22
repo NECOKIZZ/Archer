@@ -1,0 +1,6 @@
+{
+  "name": "Archer",
+  "description": "A high-fidelity real-time spin-the-wheel dashboard with mock wallet connectivity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

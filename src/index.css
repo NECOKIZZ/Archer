@@ -1,0 +1,294 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+/* ─── Design tokens ─────────────────────────────────────────── */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Electric blue palette */
+  --color-e-50:  #eef3ff;
+  --color-e-100: #d8e3ff;
+  --color-e-300: #85a8ff;
+  --color-e-400: #4d7bff;
+  --color-e-500: #0047ff;   /* primary electric blue */
+  --color-e-600: #003dd6;
+  --color-e-700: #0031a8;
+
+  /* Dark background palette */
+  --color-dark-950: #03060f;
+  --color-dark-900: #070d1c;
+  --color-dark-800: #0c1429;
+  --color-dark-700: #111e38;
+  --color-dark-600: #1a2d4e;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* ─── Base ───────────────────────────────────────────────────── */
+:root {
+  --background: #03060f;
+  --foreground: #f0f4ff;
+  --card: #070d1c;
+  --card-foreground: #f0f4ff;
+  --popover: #070d1c;
+  --popover-foreground: #f0f4ff;
+  --primary: #0047ff;
+  --primary-foreground: #ffffff;
+  --secondary: #111e38;
+  --secondary-foreground: #f0f4ff;
+  --muted: #111e38;
+  --muted-foreground: #6b7fa8;
+  --accent: #0c1429;
+  --accent-foreground: #f0f4ff;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: rgba(0, 71, 255, 0.12);
+  --input: rgba(0, 71, 255, 0.12);
+  --ring: rgba(0, 71, 255, 0.4);
+  --radius: 0.75rem;
+  --sidebar: #070d1c;
+  --sidebar-foreground: #f0f4ff;
+  --sidebar-primary: #0047ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #111e38;
+  --sidebar-accent-foreground: #f0f4ff;
+  --sidebar-border: rgba(0, 71, 255, 0.15);
+  --sidebar-ring: rgba(0, 71, 255, 0.4);
+}
+
+.dark {
+  --background: #03060f;
+  --foreground: #f0f4ff;
+  --card: #070d1c;
+  --card-foreground: #f0f4ff;
+  --popover: #0c1429;
+  --popover-foreground: #f0f4ff;
+  --primary: #0047ff;
+  --primary-foreground: #ffffff;
+  --secondary: #111e38;
+  --secondary-foreground: #f0f4ff;
+  --muted: #0c1429;
+  --muted-foreground: #6b7fa8;
+  --accent: #111e38;
+  --accent-foreground: #f0f4ff;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(0, 71, 255, 0.14);
+  --input: rgba(0, 71, 255, 0.12);
+  --ring: rgba(0, 71, 255, 0.45);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { @apply font-sans; }
+  body {
+    @apply bg-[#03060f] text-[#f0f4ff] antialiased;
+    /* Never let the body scroll */
+    overflow: hidden;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+/* ─── Viewport lock ──────────────────────────────────────────── */
+#root {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Bento card ─────────────────────────────────────────────── */
+@layer components {
+  .bento-card {
+    @apply bg-[rgba(7,13,28,0.7)] backdrop-blur-2xl border border-[rgba(0,71,255,0.18)] rounded-[24px] p-5
+           shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)];
+  }
+
+  .label {
+    @apply text-[10px] font-black uppercase tracking-[0.15em] text-[#3d5080] mb-2;
+  }
+}
+
+/* ── NEON ARCHER ANIMATIONS ── */
+
+@keyframes orb-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); filter: drop-shadow(0 0 10px rgba(0,71,255,0.2)); }
+  50% { opacity: 1; transform: scale(1.01); filter: drop-shadow(0 0 25px rgba(0,71,255,0.4)); }
+}
+
+@keyframes laser-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes spin-flare {
+  0% { filter: blur(0px) brightness(1); }
+  100% { filter: blur(12px) brightness(1.2); }
+}
+
+.neon-orb {
+  animation: orb-pulse 4s ease-in-out infinite;
+}
+
+.laser-beam-pulse {
+  animation: laser-flicker 0.1s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(0, 71, 255, 0.6));
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+  transform-origin: center;
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 20s linear infinite;
+  transform-origin: center;
+}
+
+.wheel-glow-spin {
+  box-shadow: 0 0 60px rgba(0, 71, 255, 0.25),
+              inset 0 0 30px rgba(0, 71, 255, 0.1);
+  transition: box-shadow 1s ease;
+}
+
+.wheel-glow {
+  box-shadow: 0 0 30px rgba(0, 71, 255, 0.1);
+  transition: box-shadow 1s ease;
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(0, 71, 255, 0.2);
+    border-radius: 10px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 71, 255, 0.4);
+  }
+}.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Wheel ──────────────────────────────────────────────────── */
+.wheel-glow {
+  box-shadow: 0 0 60px -12px rgba(0, 71, 255, 0.35), 0 0 30px -16px rgba(0, 71, 255, 0.2);
+}
+.wheel-glow-spin {
+  box-shadow: 0 0 80px -8px rgba(0, 71, 255, 0.5), 0 0 40px -12px rgba(77, 123, 255, 0.35);
+}
+
+/* ─── Label micro-style ──────────────────────────────────────── */
+.label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #3d5080;
+  font-weight: 700;
+}
+
+/* ─── Electric button ────────────────────────────────────────── */
+.btn-electric {
+  background: #0047ff;
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 4px 20px rgba(0, 71, 255, 0.35);
+}
+.btn-electric:hover {
+  background: #1a5fff;
+  box-shadow: 0 4px 28px rgba(0, 71, 255, 0.55);
+  transform: translateY(-1px);
+}
+.btn-electric:active { transform: translateY(0); }
+.btn-electric:disabled {
+  background: #111e38;
+  box-shadow: none;
+  color: #3d5080;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── Status pill ────────────────────────────────────────────── */
+.status-pill {
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 10px;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 71, 255, 0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(0, 71, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 71, 255, 0); }
+}
+.pulse-ring { animation: pulse-ring 2s ease-out infinite; }
