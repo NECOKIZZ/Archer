@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -5,6 +6,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ethers } from 'ethers';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from './src/lib/contract';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +40,14 @@ interface RoundHistoryItem {
   txHash: string;
 }
 
+interface RoundHistoryRow {
+  round_id: number;
+  winner: string;
+  amount: number;
+  timestamp: number;
+  tx_hash: string | null;
+}
+
 const colors = [
   '#3B82F6', '#60A5FA', '#93C5FD', '#1D4ED8', '#1E40AF',
   '#0EA5E9', '#38BDF8', '#7DD3FC', '#0369A1', '#075985',
@@ -69,6 +79,18 @@ async function startServer() {
 
   const provider = new ethers.JsonRpcProvider('https://rpc.testnet.arc.network');
   const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabase: SupabaseClient | null =
+    supabaseUrl && supabaseServiceRoleKey
+      ? createClient(supabaseUrl, supabaseServiceRoleKey)
+      : null;
+
+  if (!supabase) {
+    console.warn('[SUPABASE] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Using in-memory round history.');
+  } else {
+    console.log('[SUPABASE] Connected. Round history persistence enabled.');
+  }
 
   function broadcastState() {
     io.emit('state_update', state);
@@ -86,6 +108,70 @@ async function startServer() {
 
   function broadcastHistory() {
     io.emit('history', history);
+  }
+
+  function mapRowToHistory(row: RoundHistoryRow): RoundHistoryItem {
+    return {
+      roundId: Number(row.round_id),
+      winner: row.winner,
+      amount: Number(row.amount),
+      timestamp: Number(row.timestamp),
+      txHash: row.tx_hash ?? '',
+    };
+  }
+
+  async function loadHistoryFromDatabase() {
+    if (!supabase) return;
+
+    const pageSize = 1000;
+    let offset = 0;
+    const allRows: RoundHistoryRow[] = [];
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('round_history')
+        .select('round_id, winner, amount, timestamp, tx_hash')
+        .order('round_id', { ascending: false })
+        .range(offset, offset + pageSize - 1);
+
+      if (error) {
+        console.error('[SUPABASE] Failed to load history:', error.message);
+        return;
+      }
+
+      const rows = (data ?? []) as RoundHistoryRow[];
+      allRows.push(...rows);
+
+      if (rows.length < pageSize) break;
+      offset += pageSize;
+    }
+
+    history = dedupeHistory(allRows.map(mapRowToHistory));
+    console.log(`[SUPABASE] Loaded ${history.length} persisted round history rows.`);
+  }
+
+  async function upsertHistoryRow(item: RoundHistoryItem) {
+    if (!supabase) return;
+
+    const { error } = await supabase
+      .from('round_history')
+      .upsert(
+        {
+          round_id: item.roundId,
+          winner: item.winner,
+          amount: item.amount,
+          timestamp: item.timestamp,
+          tx_hash: item.txHash || null,
+        },
+        { onConflict: 'round_id' },
+      );
+
+    if (error) {
+      console.error('[SUPABASE] Failed to persist history row:', error.message);
+      return;
+    }
+
+    console.log(`[SUPABASE] Persisted round #${item.roundId}${item.txHash ? ` (${item.txHash.slice(0, 10)}...)` : ''}`);
   }
 
   function resetRound() {
@@ -204,10 +290,12 @@ async function startServer() {
         txHash,
       };
 
+      await upsertHistoryRow(roundEntry);
+
       history = dedupeHistory([
         roundEntry,
         ...history.filter((item) => item.roundId !== resolvedRoundId && (!txHash || item.txHash !== txHash)),
-      ]).slice(0, 20);
+      ]);
 
       broadcastHistory();
       broadcastState();
@@ -222,6 +310,8 @@ async function startServer() {
   });
 
   await syncFromChain();
+  await loadHistoryFromDatabase();
+  broadcastHistory();
   if (!timerInterval) {
     timerInterval = setInterval(syncFromChain, 3000);
   }

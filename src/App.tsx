@@ -49,8 +49,7 @@ function normalizeHistory(items: any[]): RoundHistory[] {
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    })
-    .slice(0, 20);
+    });
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -87,16 +86,26 @@ export default function App() {
 
       const roundId = Number(roundIdRaw);
       const startTime = Number(startTimeRaw);
-      const playersCount = playersRaw.length;
+      const rawEntriesCount = playersRaw.length;
       const now = Math.floor(Date.now() / 1000);
 
-      // DATA MAPPING
-      const fetchedPlayers = playersRaw.map((p: any, i: number) => ({
-        id: p.wallet,
-        address: p.wallet,
-        amount: Number(ethers.formatEther(p.amount)),
-        color: ['#0047FF', '#a855f7', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'][i % 6]
-      }));
+      // DATA MAPPING (aggregate repeated deposits by the same wallet)
+      const playerTotals = new Map<string, number>();
+      for (const p of playersRaw) {
+        const wallet = String(p.wallet).toLowerCase();
+        const amount = Number(ethers.formatEther(p.amount));
+        playerTotals.set(wallet, (playerTotals.get(wallet) ?? 0) + amount);
+      }
+
+      const fetchedPlayers = Array.from(playerTotals.entries())
+        .slice(0, 10)
+        .map(([address, amount], i) => ({
+          id: address,
+          address,
+          amount,
+          color: ['#0047FF', '#a855f7', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'][i % 6],
+        }));
+      const playersCount = fetchedPlayers.length;
       const totalPool = Number(ethers.formatEther(totalPoolRaw));
 
       setState(prev => {
@@ -107,7 +116,7 @@ export default function App() {
         const timer = Math.abs(prev.timer - blockchainTimer) > 2 ? blockchainTimer : prev.timer;
 
         let status: RoundState['status'] = 'IDLE';
-        if (playersCount >= 2) {
+        if (rawEntriesCount >= 2) {
           status = blockchainTimer <= 0 ? 'READY' : 'WAITING';
         }
 

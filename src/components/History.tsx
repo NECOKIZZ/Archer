@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Clock, Trophy, X } from 'lucide-react';
 
 interface RoundResult {
@@ -16,6 +16,16 @@ interface HistoryProps {
 export const History: React.FC<HistoryProps> = ({ history }) => {
   const [selected, setSelected] = useState<RoundResult | null>(null);
   const txUrl = (hash?: string) => (hash ? `https://testnet.arcscan.app/tx/${hash}` : null);
+  const orderedHistory = useMemo(
+    () =>
+      [...history].sort((a, b) => {
+        if (a.roundId !== undefined && b.roundId !== undefined) {
+          return a.roundId - b.roundId;
+        }
+        return a.timestamp - b.timestamp;
+      }),
+    [history],
+  );
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -41,14 +51,14 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
       </div>
 
       {/* Entries */}
-      <div className="flex-1 overflow-y-auto space-y-1.5 scrollbar-thin pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2.5 scrollbar-thin pr-1">
         {history.length > 0 ? (
-          history.map((h, i) => (
+          orderedHistory.map((h, i) => (
             <button
               type="button"
               key={h.txHash || h.roundId || i}
               onClick={() => setSelected(h)}
-              className="block group relative p-2.5 rounded-xl border transition-all duration-200 overflow-hidden hover:border-[rgba(0,71,255,0.28)]"
+              className="block group relative w-full min-h-[74px] p-3.5 rounded-xl border transition-all duration-200 overflow-hidden hover:border-[rgba(0,71,255,0.28)]"
               style={{
                 background: 'rgba(12,20,41,0.6)',
                 borderColor: 'rgba(0,71,255,0.12)',
@@ -57,29 +67,29 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
               <div className="absolute inset-y-0 left-0 w-0.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-l-xl"
                    style={{ background: '#0047ff' }} />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-mono text-[#6b7fa8] group-hover:text-[#85a8ff] transition-colors shrink-0"
+              <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-mono text-[#6b7fa8] group-hover:text-[#85a8ff] transition-colors shrink-0"
                        style={{ background: 'linear-gradient(135deg, rgba(7,13,28,0.8), rgba(12,20,41,0.9))', border: '1px solid rgba(0,71,255,0.1)' }}>
-                    {h.winner.slice(2, 4).toUpperCase()}
+                    {i + 1}
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-[11px] font-bold text-[#b4c6e4] group-hover:text-white transition-colors truncate">
+                  <div className="flex flex-col min-w-0 gap-0.5">
+                    <span className="text-[12px] font-bold leading-tight text-[#b4c6e4] group-hover:text-white transition-colors truncate">
                       {h.winner.slice(0, 6)}...{h.winner.slice(-4)}
                     </span>
-                    <span className="text-[9px] text-[#4d7bff] flex items-center gap-1 mt-0.5 uppercase font-mono">
-                      <Clock size={8} className="shrink-0" />
+                    <span className="text-[9px] text-[#4d7bff] flex items-center gap-1 uppercase font-mono">
+                      <Clock size={9} className="shrink-0" />
                       {new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    <span className="text-[8px] text-[#3d5080] font-mono uppercase tracking-wider mt-0.5">
-                      {h.txHash ? `${h.txHash.slice(0, 10)}...` : 'Tx Pending'}
+                    <span className="text-[9px] text-[#3d5080] font-mono uppercase tracking-wider truncate">
+                      {h.txHash ? `${h.txHash.slice(0, 14)}...` : 'Tx Pending'}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-black" style={{ color: '#85a8ff' }}>+{h.amount.toFixed(2)}</p>
-                  <p className="text-[8px] text-[#3d5080] font-mono uppercase font-bold tracking-widest mt-0.5">USDC</p>
+                <div className="text-right shrink-0 pr-0.5">
+                  <p className="text-[15px] font-black leading-tight" style={{ color: '#85a8ff' }}>+{h.amount.toFixed(2)}</p>
+                  <p className="text-[9px] text-[#3d5080] font-mono uppercase font-bold tracking-widest mt-0.5">USDC</p>
                 </div>
               </div>
             </button>
