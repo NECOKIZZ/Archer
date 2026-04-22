@@ -331,13 +331,41 @@ export default function App() {
     try {
       const signer = await provider.getSigner();
       const writeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+      // Final on-chain guard to avoid race-condition reverts when bot has already resolved.
+      const [playersRaw, startTimeRaw] = await Promise.all([
+        writeContract.getPlayers(),
+        writeContract.roundStartTime(),
+      ]);
+
+      if ((playersRaw?.length ?? 0) < 2) {
+        return false;
+      }
+
+      const startTime = Number(startTimeRaw);
+      if (!startTime) {
+        return false;
+      }
+
+      const now = Math.floor(Date.now() / 1000);
+      if (now < startTime + 20) {
+        return false;
+      }
       
       const tx = await writeContract.resolveRound();
       toast.info("Spinning... waiting for on-chain resolution!");
       await tx.wait();
       return true;
     } catch (err: any) {
-      toast.error('Spin Failed', { description: err.reason || err.message });
+      const message = String(err?.reason || err?.message || '').toLowerCase();
+      const isExpectedRace =
+        message.includes('need at least 2 entries to spin') ||
+        message.includes('round timer not started') ||
+        message.includes('round timer not finished');
+
+      if (!isExpectedRace) {
+        toast.error('Spin Failed', { description: err.reason || err.message });
+      }
       return false;
     }
   };
