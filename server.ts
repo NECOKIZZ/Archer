@@ -40,6 +40,14 @@ interface RoundHistoryItem {
   txHash: string;
 }
 
+interface LeaderboardEntry {
+  address: string;
+  volume: number;
+  games: number;
+  wins: number;
+  score: number;
+}
+
 interface RoundHistoryRow {
   round_id: number;
   winner: string;
@@ -52,6 +60,11 @@ const colors = [
   '#3B82F6', '#60A5FA', '#93C5FD', '#1D4ED8', '#1E40AF',
   '#0EA5E9', '#38BDF8', '#7DD3FC', '#0369A1', '#075985',
 ];
+const SCORE_WEIGHTS = {
+  volume: 0.9,
+  games: 0.07,
+  wins: 0.03,
+};
 
 async function startServer() {
   const app = express();
@@ -75,6 +88,8 @@ async function startServer() {
   };
 
   let history: RoundHistoryItem[] = [];
+  let leaderboard: LeaderboardEntry[] = [];
+  const leaderboardBase = new Map<string, Omit<LeaderboardEntry, 'score'>>();
   let timerInterval: NodeJS.Timeout | null = null;
 
   const provider = new ethers.JsonRpcProvider('https://rpc.testnet.arc.network');
@@ -108,6 +123,78 @@ async function startServer() {
 
   function broadcastHistory() {
     io.emit('history', history);
+  }
+
+  function broadcastLeaderboard() {
+    io.emit('leaderboard', leaderboard);
+  }
+
+  function ensureLeaderboardEntry(address: string) {
+    const normalized = address.toLowerCase();
+    const existing = leaderboardBase.get(normalized);
+    if (existing) return existing;
+    const created = { address: normalized, volume: 0, games: 0, wins: 0 };
+    leaderboardBase.set(normalized, created);
+    return created;
+  }
+
+  function recomputeLeaderboard() {
+    const rows = Array.from(leaderboardBase.values());
+    const maxVolume = Math.max(1, ...rows.map((row) => row.volume));
+    const maxGames = Math.max(1, ...rows.map((row) => row.games));
+    const maxWins = Math.max(1, ...rows.map((row) => row.wins));
+
+    leaderboard = rows
+      .map((row) => {
+        const volumeComponent = (row.volume / maxVolume) * SCORE_WEIGHTS.volume;
+        const gamesComponent = (row.games / maxGames) * SCORE_WEIGHTS.games;
+        const winsComponent = (row.wins / maxWins) * SCORE_WEIGHTS.wins;
+        const score = (volumeComponent + gamesComponent + winsComponent) * 100;
+
+        return {
+          ...row,
+          score: Number(score.toFixed(2)),
+        };
+      })
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.volume !== a.volume) return b.volume - a.volume;
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        return b.games - a.games;
+      });
+  }
+
+  async function bootstrapLeaderboardFromChain() {
+    try {
+      const [depositLogs, resolvedLogs] = await Promise.all([
+        contract.queryFilter(contract.filters.Deposit()),
+        contract.queryFilter(contract.filters.RoundResolved()),
+      ]);
+
+      leaderboardBase.clear();
+
+      for (const log of depositLogs) {
+        const player = String((log as any).args?.player ?? '').toLowerCase();
+        const amountRaw = (log as any).args?.amount ?? 0n;
+        if (!player) continue;
+
+        const row = ensureLeaderboardEntry(player);
+        row.volume += Number(ethers.formatEther(amountRaw));
+        row.games += 1;
+      }
+
+      for (const log of resolvedLogs) {
+        const winner = String((log as any).args?.winner ?? '').toLowerCase();
+        if (!winner) continue;
+        const row = ensureLeaderboardEntry(winner);
+        row.wins += 1;
+      }
+
+      recomputeLeaderboard();
+      console.log(`[LEADERBOARD] Computed ${leaderboard.length} player rows from chain history.`);
+    } catch (error) {
+      console.error('[LEADERBOARD] Failed to bootstrap from chain logs:', error);
+    }
   }
 
   function mapRowToHistory(row: RoundHistoryRow): RoundHistoryItem {
@@ -240,6 +327,14 @@ async function startServer() {
     console.log('User connected:', socket.id);
     socket.emit('state_update', state);
     socket.emit('history', history);
+    socket.emit('leaderboard', leaderboard);
+
+    socket.on('request_history', () => {
+      socket.emit('history', history);
+    });
+    socket.on('request_leaderboard', () => {
+      socket.emit('leaderboard', leaderboard);
+    });
 
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
@@ -260,7 +355,13 @@ async function startServer() {
     });
   }
 
-  contract.on('Deposit', async () => {
+  contract.on('Deposit', async (player, amount) => {
+    const row = ensureLeaderboardEntry(String(player));
+    row.volume += Number(ethers.formatEther(amount));
+    row.games += 1;
+    recomputeLeaderboard();
+    broadcastLeaderboard();
+
     await syncFromChain();
   });
 
@@ -277,6 +378,11 @@ async function startServer() {
     state.winningAngle = (360 * 5) + (360 - landingDegree);
     state.timer = 0;
     broadcastState();
+
+    const winnerRow = ensureLeaderboardEntry(String(winner));
+    winnerRow.wins += 1;
+    recomputeLeaderboard();
+    broadcastLeaderboard();
 
     setTimeout(async () => {
       state.status = 'FINISHED';
@@ -311,7 +417,9 @@ async function startServer() {
 
   await syncFromChain();
   await loadHistoryFromDatabase();
+  await bootstrapLeaderboardFromChain();
   broadcastHistory();
+  broadcastLeaderboard();
   if (!timerInterval) {
     timerInterval = setInterval(syncFromChain, 3000);
   }

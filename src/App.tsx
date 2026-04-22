@@ -4,9 +4,10 @@ import { CONTRACT_ADDRESS, CONTRACT_ABI } from './lib/contract';
 import socket from './lib/socket';
 import { Wheel } from './components/Wheel';
 import { History } from './components/History';
+import { Leaderboard } from './components/Leaderboard';
 import { Toaster, toast } from 'sonner';
 import { useWallet } from './hooks/useWallet';
-import { Zap, Users, Trophy, Wallet } from 'lucide-react';
+import { Users, Trophy, Wallet } from 'lucide-react';
 
 interface Player {
   id: string;
@@ -31,6 +32,14 @@ interface RoundHistory {
   amount: number;
   timestamp: number;
   txHash?: string;
+}
+
+interface LeaderboardEntry {
+  address: string;
+  volume: number;
+  games: number;
+  wins: number;
+  score: number;
 }
 
 function normalizeHistory(items: any[]): RoundHistory[] {
@@ -61,6 +70,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function App() {
   const { address, connect, disconnect, provider, balance, isOnArcTestnet } = useWallet();
+  const maxDeposit = Math.max(0, Number(balance.toFixed(2)));
+  const minDeposit = maxDeposit > 0 ? Math.min(1, maxDeposit) : 0;
   const [state, setState] = useState<RoundState>({
     players: [],
     status: 'IDLE', 
@@ -71,8 +82,20 @@ export default function App() {
     roundId: 0,
   });
   const [history, setHistory] = useState<RoundHistory[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [activeView, setActiveView] = useState<'arena' | 'leaderboard'>('arena');
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const [depositAmount, setDepositAmount] = useState<number>(10);
+  const [depositAmount, setDepositAmount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!showDepositModal) return;
+
+    setDepositAmount((current) => {
+      if (maxDeposit <= 0) return 0;
+      if (current <= 0 || current > maxDeposit) return minDeposit;
+      return Number(current.toFixed(2));
+    });
+  }, [showDepositModal, maxDeposit, minDeposit]);
 
   // 1. ATOMIC SYNC: Decoupled blockchain data from visual state
   const syncState = async (readContract: ethers.Contract, forceSkipGating = false) => {
@@ -186,6 +209,11 @@ export default function App() {
     socket.on('history', (historyData) => {
       setHistory(normalizeHistory(historyData));
     });
+    socket.on('leaderboard', (rows) => {
+      setLeaderboard(Array.isArray(rows) ? rows : []);
+    });
+    socket.emit('request_history');
+    socket.emit('request_leaderboard');
 
     // 2. Blockchain Resolution Listener (Finality)
     const onResolved = (roundId: bigint, winner: string, amount: bigint, winningRandom: bigint) => {
@@ -221,6 +249,7 @@ export default function App() {
       clearInterval(heartbeat);
       socket.off('state_update');
       socket.off('history');
+      socket.off('leaderboard');
       readContract.removeAllListeners();
     };
   }, []); 
@@ -279,6 +308,7 @@ export default function App() {
     userPlayer && state.totalPool > 0
       ? ((userPlayer.amount / state.totalPool) * 100).toFixed(1)
       : '--';
+  const sliderPercent = maxDeposit > 0 ? Math.min(100, (depositAmount / maxDeposit) * 100) : 0;
 
   /* Status pill style */
   const pillStyle = {
@@ -306,31 +336,53 @@ export default function App() {
             </div>
             
             <div className="space-y-4">
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-end gap-3">
                 <span className="label">Amount (USDC)</span>
-                <span className="text-xl font-black text-[#0047ff]">{depositAmount.toFixed(2)}</span>
+                <div className="text-right">
+                  <span className="text-xl font-black text-[#0047ff]">{depositAmount.toFixed(2)}</span>
+                  <p className="text-[10px] mt-1 font-mono text-[#6b7fa8]">
+                    Available: {maxDeposit.toFixed(2)}
+                  </p>
+                </div>
               </div>
               
               <input 
                 type="range" 
-                min="1" 
-                max={Math.max(1, Math.floor(balance))} 
+                min={0}
+                max={maxDeposit}
+                step={0.01}
                 value={depositAmount}
-                onChange={(e) => setDepositAmount(Number(e.target.value))}
+                onChange={(e) => setDepositAmount(Number(Number(e.target.value).toFixed(2)))}
                 className="w-full accent-[#0047ff] h-2 rounded-lg appearance-none cursor-pointer"
-                style={{ background: 'rgba(0,71,255,0.2)' }}
+                style={{
+                  background: `linear-gradient(90deg, rgba(0,71,255,0.85) ${sliderPercent}%, rgba(0,71,255,0.2) ${sliderPercent}%)`
+                }}
               />
+              <div className="grid grid-cols-3 gap-2">
+                {[25, 50, 100].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    disabled={maxDeposit <= 0}
+                    onClick={() => setDepositAmount(Number(((maxDeposit * pct) / 100).toFixed(2)))}
+                    className="py-1.5 rounded-lg border border-[rgba(0,71,255,0.3)] text-[10px] font-black tracking-wider text-[#9cb2da] hover:text-white hover:border-[rgba(0,71,255,0.7)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {pct === 100 ? 'MAX' : `${pct}%`}
+                  </button>
+                ))}
+              </div>
               <div className="flex justify-between items-center text-[10px] text-[#6b7fa8] font-mono">
-                <span>Min: 1</span>
-                <span>Max: {balance.toFixed(2)}</span>
+                <span>Min: 0.00</span>
+                <span>Max: {maxDeposit.toFixed(2)}</span>
               </div>
             </div>
 
             <button
               onClick={handleDeposit}
-              className="mt-2 bg-[#0047ff] hover:bg-[#1a5fff] text-white font-black uppercase tracking-widest text-sm py-3.5 rounded-xl shadow-[0_4px_20px_rgba(0,71,255,0.4)] transition-all"
+              disabled={maxDeposit <= 0 || depositAmount <= 0 || depositAmount > maxDeposit}
+              className="mt-2 bg-[#0047ff] hover:bg-[#1a5fff] text-white font-black uppercase tracking-widest text-sm py-3.5 rounded-xl shadow-[0_4px_20px_rgba(0,71,255,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#0047ff]"
             >
-              Confirm Deposit
+              {maxDeposit <= 0 ? 'Insufficient Balance' : 'Confirm Deposit'}
             </button>
           </div>
         </div>
@@ -341,22 +393,48 @@ export default function App() {
         className="shrink-0 flex items-center justify-between px-4 md:px-6
                    border-b border-[rgba(0,71,255,0.12)]
                    bg-[rgba(7,13,28,0.85)] backdrop-blur-xl z-50"
-        style={{ height: '52px' }}
+        style={{ height: '60px' }}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0047ff] to-[#003dd6]
-                          flex items-center justify-center
-                          shadow-[0_0_16px_rgba(0,71,255,0.4)]">
-            <Zap size={14} className="text-white" />
+          <div className="w-9 h-9 flex items-center justify-center overflow-hidden">
+            <img
+              src="/branding/archer-logo.png"
+              alt="Archer logo"
+              className="w-8 h-8 object-contain brightness-125 contrast-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.28)]"
+            />
           </div>
           <div>
-            <h1 className="text-sm font-black tracking-[0.12em] text-white uppercase leading-none">
+            <h1
+              className="text-lg md:text-xl font-black tracking-[0.1em] text-white uppercase leading-none"
+              style={{ fontFamily: 'var(--font-brand)' }}
+            >
               Archer
             </h1>
           </div>
         </div>
 
         <div className="hidden md:flex items-center gap-6">
+          <div
+            className="hidden lg:flex items-center gap-1 p-1 rounded-lg border"
+            style={{ background: 'rgba(12,20,41,0.6)', borderColor: 'rgba(0,71,255,0.16)' }}
+          >
+            <button
+              onClick={() => setActiveView('arena')}
+              className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-[0.14em] transition-colors ${
+                activeView === 'arena' ? 'text-white bg-[#0047ff]' : 'text-[#6b7fa8] hover:text-white'
+              }`}
+            >
+              Arena
+            </button>
+            <button
+              onClick={() => setActiveView('leaderboard')}
+              className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-[0.14em] transition-colors ${
+                activeView === 'leaderboard' ? 'text-white bg-[#0047ff]' : 'text-[#6b7fa8] hover:text-white'
+              }`}
+            >
+              Leaderboard
+            </button>
+          </div>
           <Stat label="" value={state.totalPool.toFixed(2)} unit="USDC" accent />
           <div className="w-px h-7 bg-[rgba(0,71,255,0.15)]" />
           <Stat label="" value={state.players.length.toString()} unit="/10" />
@@ -405,6 +483,12 @@ export default function App() {
                    grid-cols-1
                    md:grid-cols-12"
       >
+        {activeView === 'leaderboard' ? (
+          <section className="col-span-1 md:col-span-12 min-h-0 overflow-hidden">
+            <Leaderboard rows={leaderboard} />
+          </section>
+        ) : (
+          <>
         <aside className="hidden lg:flex lg:col-span-3 flex-col min-h-0 overflow-hidden">
           <div className="bento-card flex-1 min-h-0 flex flex-col overflow-hidden">
             <History history={history} />
@@ -481,7 +565,11 @@ export default function App() {
                 <p className="label mb-1">Deposited</p>
                 <p className="text-base font-black text-white">
                   {userPlayer ? userPlayer.amount.toFixed(2) : '0.00'}
-                  <span className="text-xs ml-1" style={{ color: '#3d5080' }}>USDC</span>
+                  <img
+                    src="/branding/usdc-logo.png"
+                    alt="USDC"
+                    className="inline-block h-5 w-auto ml-1.5 align-[-2px] brightness-125 contrast-125 drop-shadow-[0_0_4px_rgba(255,255,255,0.2)]"
+                  />
                 </p>
               </div>
             </div>
@@ -508,6 +596,8 @@ export default function App() {
             <PoolParticipants players={state.players} totalPool={state.totalPool} />
           </div>
         </aside>
+          </>
+        )}
       </main>
 
       <footer
@@ -529,12 +619,24 @@ export default function App() {
 }
 
 function Stat({ label, value, unit, accent }: { label: string; value: string; unit: string; accent?: boolean }) {
+  const isUsdcUnit = unit.trim().toUpperCase() === 'USDC';
+
   return (
     <div className="text-center">
       {label && <p className="label">{label}</p>}
       <p className="text-[20px] font-black leading-tight" style={{ color: accent ? '#4d7bff' : '#f0f4ff' }}>
         {value}
-        {unit && <span className="text-xs font-bold ml-1" style={{ color: '#3d5080' }}>{unit}</span>}
+        {unit && (
+          isUsdcUnit ? (
+            <img
+              src="/branding/usdc-logo.png"
+              alt="USDC"
+              className="inline-block h-5 w-auto ml-1.5 align-[-2px] brightness-125 contrast-125 drop-shadow-[0_0_4px_rgba(255,255,255,0.2)]"
+            />
+          ) : (
+            <span className="text-xs font-bold ml-1" style={{ color: '#3d5080' }}>{unit}</span>
+          )
+        )}
       </p>
     </div>
   );
