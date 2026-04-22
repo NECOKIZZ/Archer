@@ -2,7 +2,11 @@ import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../src/lib/contract';
 
 async function main() {
-    const provider = new ethers.JsonRpcProvider("https://rpc.testnet.arc.network");
+    const provider = new ethers.JsonRpcProvider(
+        "https://rpc.testnet.arc.network",
+        { chainId: 5042002, name: 'arc-testnet' },
+        { staticNetwork: true }
+    );
     
     // The funded deployer account acting as a second player
     const PRIVATE_KEY = "0xeb4dbc4b8bbdd24530df3f7fa2239f0a3d3fdf062e88d6af4c94593dff138d66";

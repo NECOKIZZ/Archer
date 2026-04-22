@@ -40,9 +40,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ rows }) => {
             <p className="label mb-0">Ranked by weighted score</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="label mb-0">Players</p>
-          <p className="text-sm font-black text-[#85a8ff]">{rows.length}</p>
+        <div className="text-right flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full"
+               style={{ background: 'rgba(12,20,41,0.5)', border: '1px solid rgba(0,71,255,0.15)' }}>
+            <div className="w-1.5 h-1.5 rounded-full pulse-ring" style={{ background: '#10b981' }} />
+            <span className="label" style={{ color: '#6b7fa8', marginBottom: 0 }}>Live</span>
+          </div>
+          <div>
+            <p className="label mb-0">Players</p>
+            <p className="text-sm font-black text-[#85a8ff]">{rows.length}</p>
+          </div>
         </div>
       </div>
 

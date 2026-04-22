@@ -17,6 +17,8 @@ contract ArcherPool {
     }
 
     Player[] public currentPlayers;
+    // 1-based index into `currentPlayers`; 0 means "not in current round"
+    mapping(address => uint256) private playerIndexPlusOne;
     uint256 public totalPool;
     uint256 public roundId;
     uint256 public roundStartTime;
@@ -34,19 +36,26 @@ contract ArcherPool {
      */
     function deposit() public payable {
         require(msg.value > 0, "Deposit must be greater than 0");
-        require(currentPlayers.length < MAX_PLAYERS, "Pool is full");
+        uint256 idxPlusOne = playerIndexPlusOne[msg.sender];
 
-        currentPlayers.push(Player({
-            wallet: msg.sender,
-            amount: msg.value
-        }));
+        if (idxPlusOne == 0) {
+            require(currentPlayers.length < MAX_PLAYERS, "Pool is full");
+            currentPlayers.push(Player({
+                wallet: msg.sender,
+                amount: msg.value
+            }));
+            playerIndexPlusOne[msg.sender] = currentPlayers.length; // 1-based index
+
+            // Start timer only when the second UNIQUE player joins.
+            if (currentPlayers.length == 2 && roundStartTime == 0) {
+                roundStartTime = block.timestamp;
+            }
+        } else {
+            // Existing player topping up stake in the same round.
+            currentPlayers[idxPlusOne - 1].amount += msg.value;
+        }
         
         totalPool += msg.value;
-
-        // If this is the 2nd player, start the 20-second timer
-        if (currentPlayers.length == 2) {
-            roundStartTime = block.timestamp;
-        }
 
         emit Deposit(msg.sender, msg.value, totalPool);
     }
@@ -80,6 +89,11 @@ contract ArcherPool {
         // Failsafe in case of rounding errors
         if (winner == address(0)) {
             winner = currentPlayers[currentPlayers.length - 1].wallet;
+        }
+
+        // Reset per-round player membership bookkeeping
+        for (uint256 i = 0; i < currentPlayers.length; i++) {
+            delete playerIndexPlusOne[currentPlayers[i].wallet];
         }
 
         // Reset the state for the next round

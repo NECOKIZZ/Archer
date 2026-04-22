@@ -15,6 +15,9 @@ const __dirname = path.dirname(__filename);
 const POOL_DURATION = 20;
 const RESET_DURATION = 10;
 const PLAYER_CAP = 10;
+const LEADERBOARD_BOOTSTRAP_BLOCKS = Number(process.env.LEADERBOARD_BOOTSTRAP_BLOCKS ?? 300000);
+const ARC_RPC_URL = 'https://rpc.testnet.arc.network';
+const ARC_NETWORK = { chainId: 5042002, name: 'arc-testnet' } as const;
 
 interface Player {
   id: string;
@@ -30,6 +33,7 @@ interface RoundState {
   winnerId: string | null;
   totalPool: number;
   winningAngle: number;
+  roundId: number;
 }
 
 interface RoundHistoryItem {
@@ -85,14 +89,19 @@ async function startServer() {
     winnerId: null,
     totalPool: 0,
     winningAngle: 0,
+    roundId: 0,
   };
 
   let history: RoundHistoryItem[] = [];
   let leaderboard: LeaderboardEntry[] = [];
   const leaderboardBase = new Map<string, Omit<LeaderboardEntry, 'score'>>();
+  const playerRoundKeys = new Set<string>();
+  const roundIdByBlock = new Map<number, number>();
   let timerInterval: NodeJS.Timeout | null = null;
+  let lastProcessedBlock = 0;
+  let tickInFlight = false;
 
-  const provider = new ethers.JsonRpcProvider('https://rpc.testnet.arc.network');
+  const provider = new ethers.JsonRpcProvider(ARC_RPC_URL, ARC_NETWORK, { staticNetwork: true });
   const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -138,6 +147,41 @@ async function startServer() {
     return created;
   }
 
+  function ensureUniqueGame(address: string, roundId: number) {
+    const normalized = address.toLowerCase();
+    const key = `${normalized}:${roundId}`;
+    if (playerRoundKeys.has(key)) return false;
+    playerRoundKeys.add(key);
+    const row = ensureLeaderboardEntry(normalized);
+    row.games += 1;
+    return true;
+  }
+
+  async function getRoundIdAtBlock(blockNumber: number): Promise<number> {
+    const cached = roundIdByBlock.get(blockNumber);
+    if (cached !== undefined) return cached;
+    try {
+      const roundIdRaw = await contract.roundId({ blockTag: blockNumber });
+      const roundId = Number(roundIdRaw);
+      roundIdByBlock.set(blockNumber, roundId);
+      return roundId;
+    } catch {
+      return state.roundId;
+    }
+  }
+
+  async function queryLogsChunked<T>(filter: any, fromBlock: number, toBlock: number, chunkSize = 9000): Promise<T[]> {
+    const all: T[] = [];
+
+    for (let from = fromBlock; from <= toBlock; from += chunkSize) {
+      const to = Math.min(toBlock, from + chunkSize - 1);
+      const part = await contract.queryFilter(filter, from, to);
+      all.push(...(part as T[]));
+    }
+
+    return all;
+  }
+
   function recomputeLeaderboard() {
     const rows = Array.from(leaderboardBase.values());
     const maxVolume = Math.max(1, ...rows.map((row) => row.volume));
@@ -164,11 +208,13 @@ async function startServer() {
       });
   }
 
-  async function bootstrapLeaderboardFromChain() {
+  async function bootstrapLeaderboardFromChain(): Promise<number> {
     try {
+      const latestBlock = await provider.getBlockNumber();
+      const fromBlock = Math.max(0, latestBlock - LEADERBOARD_BOOTSTRAP_BLOCKS);
       const [depositLogs, resolvedLogs] = await Promise.all([
-        contract.queryFilter(contract.filters.Deposit()),
-        contract.queryFilter(contract.filters.RoundResolved()),
+        queryLogsChunked<any>(contract.filters.Deposit(), fromBlock, latestBlock),
+        queryLogsChunked<any>(contract.filters.RoundResolved(), fromBlock, latestBlock),
       ]);
 
       leaderboardBase.clear();
@@ -180,7 +226,9 @@ async function startServer() {
 
         const row = ensureLeaderboardEntry(player);
         row.volume += Number(ethers.formatEther(amountRaw));
-        row.games += 1;
+        const blockNumber = Number((log as any).blockNumber ?? 0);
+        const roundId = blockNumber > 0 ? await getRoundIdAtBlock(blockNumber) : state.roundId;
+        ensureUniqueGame(player, Math.max(0, roundId));
       }
 
       for (const log of resolvedLogs) {
@@ -191,10 +239,106 @@ async function startServer() {
       }
 
       recomputeLeaderboard();
-      console.log(`[LEADERBOARD] Computed ${leaderboard.length} player rows from chain history.`);
+      console.log(`[LEADERBOARD] Computed ${leaderboard.length} player rows from chain history (${fromBlock} -> ${latestBlock}).`);
+      return latestBlock;
     } catch (error) {
       console.error('[LEADERBOARD] Failed to bootstrap from chain logs:', error);
+      return await provider.getBlockNumber();
     }
+  }
+
+  async function handleDepositLog(log: any) {
+    const player = String(log?.args?.player ?? '').toLowerCase();
+    const amount = log?.args?.amount ?? 0n;
+    if (!player) return;
+
+    const row = ensureLeaderboardEntry(player);
+    row.volume += Number(ethers.formatEther(amount));
+    const blockNumber = Number(log?.blockNumber ?? 0);
+    const roundIdFromEvent = blockNumber > 0 ? await getRoundIdAtBlock(blockNumber) : state.roundId;
+    ensureUniqueGame(player, Math.max(0, roundIdFromEvent));
+  }
+
+  async function handleRoundResolvedLog(log: any) {
+    const roundId = log?.args?.roundId ?? 0n;
+    const winner = String(log?.args?.winner ?? '').toLowerCase();
+    const amount = log?.args?.amount ?? 0n;
+    const winningRandom = log?.args?.winningRandom ?? 0n;
+
+    if (!winner) return;
+
+    const total = Number(ethers.formatEther(amount));
+    const randomVal = Number(ethers.formatEther(winningRandom));
+    const landingDegree = total > 0 ? (randomVal / total) * 360 : 0;
+
+    state.status = 'SPINNING';
+    state.winnerId = winner;
+    state.totalPool = total;
+    state.winningAngle = (360 * 5) + (360 - landingDegree);
+    state.timer = 0;
+    broadcastState();
+
+    const winnerRow = ensureLeaderboardEntry(winner);
+    winnerRow.wins += 1;
+    recomputeLeaderboard();
+    broadcastLeaderboard();
+
+    setTimeout(async () => {
+      state.status = 'FINISHED';
+      const resolvedRoundId = Number(roundId);
+      const txHash = String(log?.transactionHash ?? log?.log?.transactionHash ?? '');
+      const roundEntry: RoundHistoryItem = {
+        roundId: resolvedRoundId,
+        winner,
+        amount: total,
+        timestamp: Date.now(),
+        txHash,
+      };
+
+      await upsertHistoryRow(roundEntry);
+
+      history = dedupeHistory([
+        roundEntry,
+        ...history.filter((item) => item.roundId !== resolvedRoundId && (!txHash || item.txHash !== txHash)),
+      ]);
+
+      broadcastHistory();
+      broadcastState();
+
+      setTimeout(async () => {
+        await syncFromChain();
+        if (state.players.length === 0) {
+          resetRound();
+        }
+      }, RESET_DURATION * 1000);
+    }, 6000);
+  }
+
+  async function pollNewEvents() {
+    const latestBlock = await provider.getBlockNumber();
+    if (latestBlock <= lastProcessedBlock) return;
+
+    const fromBlock = lastProcessedBlock + 1;
+    const toBlock = latestBlock;
+    const [depositLogs, resolvedLogs] = await Promise.all([
+      queryLogsChunked<any>(contract.filters.Deposit(), fromBlock, toBlock),
+      queryLogsChunked<any>(contract.filters.RoundResolved(), fromBlock, toBlock),
+    ]);
+
+    for (const log of depositLogs) {
+      await handleDepositLog(log);
+    }
+    for (const log of resolvedLogs) {
+      console.log(`[ON-CHAIN] Round ${String(log?.args?.roundId ?? '?')} resolved. Winner: ${String(log?.args?.winner ?? '')}`);
+      await handleRoundResolvedLog(log);
+    }
+
+    if (depositLogs.length > 0 || resolvedLogs.length > 0) {
+      recomputeLeaderboard();
+      broadcastLeaderboard();
+    }
+
+    lastProcessedBlock = toBlock;
   }
 
   function mapRowToHistory(row: RoundHistoryRow): RoundHistoryItem {
@@ -262,11 +406,6 @@ async function startServer() {
   }
 
   function resetRound() {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-
     state = {
       players: [],
       status: 'IDLE',
@@ -274,6 +413,7 @@ async function startServer() {
       winnerId: null,
       totalPool: 0,
       winningAngle: 0,
+      roundId: state.roundId,
     };
 
     broadcastState();
@@ -281,10 +421,11 @@ async function startServer() {
 
   async function syncFromChain() {
     try {
-      const [playersRaw, totalPoolRaw, startTimeRaw] = await Promise.all([
+      const [playersRaw, totalPoolRaw, startTimeRaw, roundIdRaw] = await Promise.all([
         contract.getPlayers(),
         contract.totalPool(),
         contract.roundStartTime(),
+        contract.roundId(),
       ]);
 
       const now = Math.floor(Date.now() / 1000);
@@ -310,6 +451,7 @@ async function startServer() {
       state.players = mappedPlayers;
       state.totalPool = Number(ethers.formatEther(totalPoolRaw));
       state.timer = timer;
+      state.roundId = Number(roundIdRaw);
 
       if (mappedPlayers.length >= 2) {
         state.status = timer <= 0 ? 'READY' : 'WAITING';
@@ -355,78 +497,43 @@ async function startServer() {
     });
   }
 
-  contract.on('Deposit', async (player, amount) => {
-    const row = ensureLeaderboardEntry(String(player));
-    row.volume += Number(ethers.formatEther(amount));
-    row.games += 1;
-    recomputeLeaderboard();
-    broadcastLeaderboard();
+  const PORT = 3000;
+  httpServer.listen(PORT, '0.0.0.0', async () => {
+    console.log(`Server running at http://0.0.0.0:${PORT}`);
 
-    await syncFromChain();
-  });
-
-  contract.on('RoundResolved', async (roundId, winner, amount, winningRandom, event) => {
-    console.log(`[ON-CHAIN] Round ${roundId} resolved. Winner: ${winner}`);
-
-    const total = Number(ethers.formatEther(amount));
-    const randomVal = Number(ethers.formatEther(winningRandom));
-    const landingDegree = total > 0 ? (randomVal / total) * 360 : 0;
-
-    state.status = 'SPINNING';
-    state.winnerId = String(winner).toLowerCase();
-    state.totalPool = total;
-    state.winningAngle = (360 * 5) + (360 - landingDegree);
-    state.timer = 0;
-    broadcastState();
-
-    const winnerRow = ensureLeaderboardEntry(String(winner));
-    winnerRow.wins += 1;
-    recomputeLeaderboard();
-    broadcastLeaderboard();
-
-    setTimeout(async () => {
-      state.status = 'FINISHED';
-      const resolvedRoundId = Number(roundId);
-      const txHash = String(event?.log?.transactionHash ?? event?.transactionHash ?? '');
-      const roundEntry: RoundHistoryItem = {
-        roundId: resolvedRoundId,
-        winner: String(winner).toLowerCase(),
-        amount: total,
-        timestamp: Date.now(),
-        txHash,
-      };
-
-      await upsertHistoryRow(roundEntry);
-
-      history = dedupeHistory([
-        roundEntry,
-        ...history.filter((item) => item.roundId !== resolvedRoundId && (!txHash || item.txHash !== txHash)),
-      ]);
-
+    try {
+      await syncFromChain();
+      await loadHistoryFromDatabase();
+      lastProcessedBlock = await provider.getBlockNumber();
       broadcastHistory();
       broadcastState();
 
-      setTimeout(async () => {
-        await syncFromChain();
-        if (state.players.length === 0) {
-          resetRound();
+      // Run heavy leaderboard bootstrap in the background so startup is instant.
+      void (async () => {
+        const processedTo = await bootstrapLeaderboardFromChain();
+        if (processedTo > lastProcessedBlock) {
+          lastProcessedBlock = processedTo;
         }
-      }, RESET_DURATION * 1000);
-    }, 6000);
-  });
+        broadcastLeaderboard();
+      })();
+    } catch (error) {
+      console.error('[INIT] Startup sync failed:', error);
+    }
 
-  await syncFromChain();
-  await loadHistoryFromDatabase();
-  await bootstrapLeaderboardFromChain();
-  broadcastHistory();
-  broadcastLeaderboard();
-  if (!timerInterval) {
-    timerInterval = setInterval(syncFromChain, 3000);
-  }
-
-  const PORT = 3000;
-  httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://0.0.0.0:${PORT}`);
+    if (!timerInterval) {
+      timerInterval = setInterval(async () => {
+        if (tickInFlight) return;
+        tickInFlight = true;
+        try {
+          await syncFromChain();
+          await pollNewEvents();
+        } catch (error) {
+          console.error('[EVENT-POLL] Tick failed:', error);
+        } finally {
+          tickInFlight = false;
+        }
+      }, 3000);
+    }
   });
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from './lib/contract';
 import socket from './lib/socket';
@@ -8,6 +8,8 @@ import { Leaderboard } from './components/Leaderboard';
 import { Toaster, toast } from 'sonner';
 import { useWallet } from './hooks/useWallet';
 import { Users, Trophy, Wallet } from 'lucide-react';
+const ARC_RPC_URL = 'https://rpc.testnet.arc.network';
+const ARC_NETWORK = { chainId: 5042002, name: 'arc-testnet' } as const;
 
 interface Player {
   id: string;
@@ -86,6 +88,7 @@ export default function App() {
   const [activeView, setActiveView] = useState<'arena' | 'leaderboard'>('arena');
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState<number>(0);
+  const autoResolveAttemptedRef = useRef<string>('');
 
   useEffect(() => {
     if (!showDepositModal) return;
@@ -181,7 +184,7 @@ export default function App() {
 
   // 3. HEARTBEAT & EVENT ENGINE
   useEffect(() => {
-    const rpcProvider = new ethers.JsonRpcProvider("https://rpc.testnet.arc.network");
+    const rpcProvider = new ethers.JsonRpcProvider(ARC_RPC_URL, ARC_NETWORK, { staticNetwork: true });
     const readContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
 
     syncState(readContract, true);
@@ -197,7 +200,7 @@ export default function App() {
         return { 
           ...prev, 
           ...newState, 
-          roundId: prev.roundId,
+          roundId: typeof newState.roundId === 'number' ? newState.roundId : prev.roundId,
           players: newState.players.map((p: any) => ({
             ...p,
             color: ['#0047FF', '#a855f7', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'][newState.players.indexOf(p) % 6]
@@ -254,23 +257,57 @@ export default function App() {
     };
   }, []); 
 
-  // Stable Fallback Logic (Handles the 5s signing grace period)
+  // Backup signer logic:
+  // Bot gets first chance to resolve; if it fails, fallback asks a participating player wallet to sign.
   useEffect(() => {
     const isReady = state.status === 'READY';
     if (!isReady) return;
+    if (!address || !isOnArcTestnet) return;
 
-    const lastPlayer = state.players[state.players.length - 1];
-    const isMyTurnToSpin = address && lastPlayer && lastPlayer.address.toLowerCase() === address.toLowerCase();
+    const normalized = address.toLowerCase();
+    const isParticipant = state.players.some((p) => p.address.toLowerCase() === normalized);
+    if (!isParticipant) return;
 
-    if (isMyTurnToSpin) {
-      const fallbackTimer = setTimeout(() => {
-        toast.info("Automated Dealer timed out. Please sign manually to spin!");
-        handleResolve();
-      }, 5000);
+    const attemptKey = `${state.roundId}:${normalized}`;
+    if (autoResolveAttemptedRef.current === attemptKey) return;
+    autoResolveAttemptedRef.current = attemptKey;
 
-      return () => clearTimeout(fallbackTimer);
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const tryBackupResolve = async () => {
+      if (cancelled) return;
+      toast.info("Bot did not resolve in time. Triggering backup signer from your wallet...");
+      const ok = await handleResolve();
+
+      // Retry every 5s while round is still unresolved; this covers clock drift and transient RPC delays.
+      if (!ok && !cancelled) {
+        timeoutId = setTimeout(tryBackupResolve, 5000);
+      }
+    };
+
+    timeoutId = setTimeout(tryBackupResolve, 5000);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [state.status, state.roundId, address, isOnArcTestnet, state.players]);
+
+  // Reset one-shot guard when round is no longer ready, allowing fresh fallback attempts next round.
+  useEffect(() => {
+    if (state.status !== 'READY') {
+      autoResolveAttemptedRef.current = '';
     }
-  }, [state.status === 'READY', state.roundId, address, state.players]);
+  }, [state.status]);
+
+  // READY notification to make it clear bot is expected to handle spin first.
+  useEffect(() => {
+    if (state.status !== 'READY') return;
+    if (!address || !isOnArcTestnet) return;
+
+    toast.info('Round is ready. Waiting for bot to resolve on-chain...');
+  }, [state.status, state.roundId, address, isOnArcTestnet]);
 
   const handleDeposit = async () => {
     if (!provider) return;
@@ -289,8 +326,8 @@ export default function App() {
     }
   };
 
-  const handleResolve = async () => {
-    if (!provider) return;
+  const handleResolve = async (): Promise<boolean> => {
+    if (!provider) return false;
     try {
       const signer = await provider.getSigner();
       const writeContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
@@ -298,8 +335,10 @@ export default function App() {
       const tx = await writeContract.resolveRound();
       toast.info("Spinning... waiting for on-chain resolution!");
       await tx.wait();
+      return true;
     } catch (err: any) {
       toast.error('Spin Failed', { description: err.reason || err.message });
+      return false;
     }
   };
 

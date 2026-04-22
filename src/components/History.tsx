@@ -13,19 +13,33 @@ interface HistoryProps {
   history: RoundResult[];
 }
 
+interface RankedRound extends RoundResult {
+  displayId: number;
+}
+
 export const History: React.FC<HistoryProps> = ({ history }) => {
-  const [selected, setSelected] = useState<RoundResult | null>(null);
+  const [selected, setSelected] = useState<RankedRound | null>(null);
   const txUrl = (hash?: string) => (hash ? `https://testnet.arcscan.app/tx/${hash}` : null);
-  const orderedHistory = useMemo(
-    () =>
-      [...history].sort((a, b) => {
-        if (a.roundId !== undefined && b.roundId !== undefined) {
-          return a.roundId - b.roundId;
-        }
-        return a.timestamp - b.timestamp;
-      }),
-    [history],
-  );
+  const orderedHistory = useMemo(() => {
+    // 1) Rank by timestamp from oldest to newest so first-ever session gets ID=1.
+    const oldestFirst = [...history].sort((a, b) => {
+      if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+      const aRound = a.roundId ?? Number.MAX_SAFE_INTEGER;
+      const bRound = b.roundId ?? Number.MAX_SAFE_INTEGER;
+      return aRound - bRound;
+    });
+
+    const withDisplayIds: RankedRound[] = oldestFirst.map((item, index) => ({
+      ...item,
+      displayId: index + 1,
+    }));
+
+    // 2) Show most recent at the top.
+    return withDisplayIds.sort((a, b) => {
+      if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
+      return b.displayId - a.displayId;
+    });
+  }, [history]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -53,10 +67,11 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
       {/* Entries */}
       <div className="flex-1 overflow-y-auto space-y-2.5 scrollbar-thin pr-1">
         {history.length > 0 ? (
-          orderedHistory.map((h, i) => (
+          orderedHistory.map((h, i) => {
+            return (
             <button
               type="button"
-              key={h.txHash || h.roundId || i}
+              key={h.txHash || h.displayId || i}
               onClick={() => setSelected(h)}
               className="block group relative w-full min-h-[74px] p-3.5 rounded-xl border transition-all duration-200 overflow-hidden hover:border-[rgba(0,71,255,0.28)]"
               style={{
@@ -71,7 +86,7 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-mono text-[#6b7fa8] group-hover:text-[#85a8ff] transition-colors shrink-0"
                        style={{ background: 'linear-gradient(135deg, rgba(7,13,28,0.8), rgba(12,20,41,0.9))', border: '1px solid rgba(0,71,255,0.1)' }}>
-                    {i + 1}
+                    {h.displayId}
                   </div>
                   <div className="flex flex-col min-w-0 gap-0.5">
                     <span className="text-[12px] font-bold leading-tight text-[#b4c6e4] group-hover:text-white transition-colors truncate">
@@ -93,7 +108,7 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
                 </div>
               </div>
             </button>
-          ))
+          )})
         ) : (
           <div className="flex flex-col items-center justify-center h-full space-y-2 py-8">
             <Clock size={20} style={{ color: '#1a2d4e' }} />
@@ -125,7 +140,7 @@ export const History: React.FC<HistoryProps> = ({ history }) => {
             <div className="space-y-3">
               <div>
                 <p className="label mb-1">Round Number</p>
-                <p className="text-sm font-bold text-white">#{selected.roundId ?? 'N/A'}</p>
+                <p className="text-sm font-bold text-white">#{selected.displayId}</p>
               </div>
               <div>
                 <p className="label mb-1">Round Winner</p>
