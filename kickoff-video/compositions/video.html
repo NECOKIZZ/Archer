@@ -328,7 +328,7 @@
         position: absolute;
         left: 16px;
         top: 36px;
-        width: 1168px;
+        width: 900px;
         height: 4px;
         border-radius: 2px;
         background: var(--white);
@@ -562,16 +562,16 @@
       }
       .card {
         position: absolute;
-        top: 250px;
-        width: 400px;
-        height: 560px;
+        top: 262px;
+        width: 380px;
+        height: 532px;
       }
       .card img {
         position: absolute;
         left: 0;
         top: 0;
-        width: 400px;
-        height: 560px;
+        width: 380px;
+        height: 532px;
         display: block;
       }
       .card .ring {
@@ -586,15 +586,15 @@
         position: absolute;
         left: 30px;
         top: 40px;
-        width: 340px;
-        height: 520px;
+        width: 320px;
+        height: 490px;
         border-radius: 40px;
         box-shadow: 0 40px 80px rgba(0, 0, 0, 0.28);
       }
       .line6 {
         position: absolute;
-        top: 860px;
-        width: 400px;
+        top: 866px;
+        width: 380px;
         height: 64px;
         border-radius: 999px;
         border: 3px solid var(--black);
@@ -748,16 +748,16 @@
         color: var(--white);
       }
       #chain {
-        left: 760px;
-        top: 770px;
-        width: 400px;
-        height: 60px;
+        left: 700px;
+        top: 766px;
+        width: 520px;
+        height: 72px;
         border-radius: 999px;
         border: 2px solid #5a5a5a;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 26px;
+        font-size: 34px;
         color: #d0d0d0;
       }
     </style>
@@ -856,6 +856,8 @@
           </svg>
         </div>
       </div>
+
+      <div id="iris" class="abs" style="left: 680px; top: 119px; width: 100px; height: 100px; border-radius: 50%; background: #7b62f6"></div>
 
       <!-- ============ SCENE 4: KICKOFF on accent ============ -->
       <div id="s4" class="scene">
@@ -959,27 +961,27 @@
             <span id="h6-pick" class="word">Pick</span><span id="h6-your" class="word">your</span
             ><span id="h6-player" class="word serif acc">player.</span>
           </div>
-          <div id="card0" class="card" style="left: 360px">
+          <div id="card0" class="card" style="left: 290px">
             <div class="shadow"></div>
             <div class="ring"></div>
             <img src="assets/cards/palmer.webp" alt="Cole Palmer" />
           </div>
-          <div id="card1" class="card" style="left: 760px">
+          <div id="card1" class="card" style="left: 770px">
             <div class="shadow"></div>
             <div id="ring1" class="ring"></div>
             <img src="assets/cards/haaland.webp" alt="Erling Haaland" />
           </div>
-          <div id="card2" class="card" style="left: 1160px">
+          <div id="card2" class="card" style="left: 1250px">
             <div class="shadow"></div>
             <div class="ring"></div>
             <img src="assets/cards/gyokeres.webp" alt="Viktor Gyokeres" />
           </div>
-          <div id="line0" class="line6" style="left: 360px"><span>LINE 7.5 PTS</span></div>
-          <div id="line1" class="line6" style="left: 760px">
+          <div id="line0" class="line6" style="left: 290px"><span>LINE 7.5 PTS</span></div>
+          <div id="line1" class="line6" style="left: 770px">
             <span id="line1base">LINE 9.5 PTS</span>
             <div id="fill1" class="fill"><span>LINE 9.5 PTS</span></div>
           </div>
-          <div id="line2" class="line6" style="left: 1160px"><span>LINE 8.0 PTS</span></div>
+          <div id="line2" class="line6" style="left: 1250px"><span>LINE 8.0 PTS</span></div>
           <svg id="cursor6" class="abs" viewBox="0 0 64 80" aria-hidden="true">
             <path
               d="M6 4 L6 64 L22 50 L33 74 L44 69 L33 46 L54 46 Z"
@@ -1238,12 +1240,12 @@
       });
       // coins: pool -> payout. Hand-fixed [startX, startY, endX, endY, rank].
       const C7 = [
-        [240, 250, 830, 424, 0], [323, 264, 816, 436, 0], [406, 250, 802, 424, 0], [489, 264, 788, 436, 0],
-        [572, 250, 774, 424, 0], [655, 264, 830, 538, 1], [258, 250, 816, 550, 1], [341, 264, 802, 538, 1],
-        [424, 250, 788, 550, 1], [507, 264, 830, 652, 2], [590, 250, 816, 664, 2], [673, 264, 802, 652, 2],
-        [276, 250, 830, 766, 3], [359, 264, 816, 778, 3], [442, 250, 802, 766, 3], [525, 264, 830, 880, 4],
-        [608, 250, 816, 892, 4], [691, 264, 1650, 424, 5], [294, 250, 1636, 436, 5], [377, 264, 1650, 538, 6],
-        [460, 250, 1636, 550, 6], [543, 264, 1650, 652, 7], [626, 250, 1650, 766, 8], [709, 264, 1650, 880, 9],
+        [240, 318, 830, 424, 0], [323, 332, 816, 436, 0], [406, 318, 802, 424, 0], [489, 332, 788, 436, 0],
+        [572, 318, 774, 424, 0], [655, 332, 830, 538, 1], [258, 318, 816, 550, 1], [341, 332, 802, 538, 1],
+        [424, 318, 788, 550, 1], [507, 332, 830, 652, 2], [590, 318, 816, 664, 2], [673, 332, 802, 652, 2],
+        [276, 318, 830, 766, 3], [359, 332, 816, 778, 3], [442, 318, 802, 766, 3], [525, 332, 830, 880, 4],
+        [608, 318, 816, 892, 4], [691, 332, 1650, 424, 5], [294, 318, 1636, 436, 5], [377, 332, 1650, 538, 6],
+        [460, 318, 1636, 550, 6], [543, 332, 1650, 652, 7], [626, 318, 1650, 766, 8], [709, 332, 1650, 880, 9],
       ];
       const coins7 = document.getElementById("coins7");
       const CE7 = C7.map(() => {
@@ -1321,17 +1323,17 @@
       // glow spreads from the tapped cell and fades with distance
       const tapR = 2,
         tapC = 1;
-      const GLOW = [1, 0.62, 0.34, 0.17, 0.08, 0.04, 0.02, 0.01, 0.0];
       for (let r = 0; r < 5; r++) {
         for (let c = 0; c < 5; c++) {
-          const d = Math.abs(r - tapR) + Math.abs(c - tapC);
+          // straight-line distance from the tap: glow falls off smoothly in every direction
+          const d = Math.hypot(r - tapR, c - tapC);
           const g = G2[r + "-" + c].querySelector(".glow");
-          tl.fromTo(g, { opacity: 0 }, { opacity: GLOW[d], duration: 0.4, ease: "power2.out" }, 7.0 + d * 0.08);
+          tl.fromTo(g, { opacity: 0 }, { opacity: Math.exp(-d * 0.95), duration: 0.45, ease: "power2.out" }, 7.0 + d * 0.1);
         }
       }
       tl.fromTo(G2["2-1"], { scale: 1 }, { scale: 1.14, duration: 0.08, ease: "power2.out", immediateRender: false }, 7.0);
       tl.to(G2["2-1"], { scale: 1, duration: 0.5, ease: "elastic.out(1, 0.4)" }, 7.08);
-      tl.fromTo("#ripple", { scale: 0.6, opacity: 0.9 }, { scale: 6, opacity: 0, duration: 1.0, ease: "power2.out" }, 7.0);
+      tl.fromTo("#ripple", { scale: 0.6, opacity: 0.9 }, { scale: 6, opacity: 0, duration: 1.0, ease: "power2.out", immediateRender: false }, 7.0);
       tl.to("#cursor", { x: 520, y: 820, opacity: 0, duration: 0.6, ease: "power2.in" }, 7.6);
 
       // "Close" rises, "still" snaps in from the right, "pays." scale-slams
@@ -1426,16 +1428,20 @@
       punch("#h3-winners", 20.0, 1.06);
 
       // TRANSITION 3 -> 4: zoom through the rank-1 row into the accent
-      tl.set("#s23", { transformOrigin: "1240px 186px" }, 0);
-      tl.to("#s23", { scale: 14, duration: 0.5, ease: "power3.in" }, land(21.04, 0.5));
-      tl.set("#s4", { opacity: 1 }, 20.9);
-      tl.fromTo("#s4", { scale: 0.2 }, { scale: 1, duration: 0.14, ease: "power2.out", immediateRender: false }, 20.9);
+      // camera pushes into rank 1's avatar while an accent iris opens from it and floods the frame
+      tl.set("#s23", { transformOrigin: "730px 169px" }, 0);
+      tl.set("#iris", { opacity: 0 }, 0);
+      tl.to("#s23", { scale: 7, duration: 0.5, ease: "power3.in" }, land(21.04, 0.5));
+      tl.set("#iris", { opacity: 1 }, 20.62);
+      tl.fromTo("#iris", { scale: 0 }, { scale: 34, duration: 0.42, ease: "power3.in", immediateRender: false }, land(21.04, 0.42));
+      tl.set("#s4", { opacity: 1 }, 21.04);
       tl.set("#s23", { opacity: 0 }, 21.05);
+      tl.set("#iris", { opacity: 0 }, 21.1);
 
       // ==================================================================
       // SCENE 4 (21 - 26): KICKOFF + "Beat the pack. Keep the stack."
       // ==================================================================
-      tl.fromTo("#cam4", { scale: 1.02, x: 20 }, { scale: 1.07, x: -20, duration: 5.2, ease: "none" }, 20.9);
+      tl.fromTo("#cam4", { scale: 1.02, x: 20 }, { scale: 1.07, x: -20, duration: 5.0, ease: "none" }, 21.04);
       tl.fromTo("#s4-mark", { rotation: -8, y: 0 }, { rotation: 6, y: -60, duration: 5.2, ease: "none" }, 20.9);
       tl.fromTo(
         "#s4-word .ch",
@@ -1619,7 +1625,7 @@
         const t0 = 49.02 + k * 0.045;
         tl.fromTo(c, { x: sx, y: sy, opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.1 }, t0);
         tl.fromTo(c, { x: sx }, { x: ex, duration: 0.7, ease: "power1.inOut", immediateRender: false }, t0);
-        tl.fromTo(c, { y: sy }, { y: sy - 90, duration: 0.25, ease: "power2.out", immediateRender: false }, t0);
+        tl.fromTo(c, { y: sy }, { y: sy - 16, duration: 0.25, ease: "power2.out", immediateRender: false }, t0);
         tl.to(c, { y: ey, duration: 0.45, ease: "power2.in" }, t0 + 0.25);
         tl.to(c, { scale: 0.2, opacity: 0, duration: 0.1 }, t0 + 0.68);
       });
@@ -1629,7 +1635,6 @@
         counter(row.querySelector(".ret"), 0, T10[i][3], t0, 1.6 - i * 0.05, usd);
         tl.fromTo(row.querySelector(".rglow"), { opacity: 0 }, { opacity: [1, 0.7, 0.55, 0.45, 0.38, 0.3, 0.26, 0.22, 0.18, 0.15][i], duration: 0.4 }, t0);
       });
-      counter(document.getElementById("poolnum"), 48250, 0, 49.02, 1.6, usd, "power1.in");
       // "Top 10" drops, "split it." slams
       tl.fromTo("#h7-top", { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }, land(51.0, 0.2));
       tl.fromTo("#h7-split", { scale: 3.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power4.in" }, land(51.51, 0.2));
