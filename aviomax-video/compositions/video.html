@@ -1,0 +1,1375 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>AvioMax: Shop smart. Sell big.</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Poppins";
+        src: url("assets/fonts/Poppins-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Poppins";
+        src: url("assets/fonts/Poppins-Medium.ttf") format("truetype");
+        font-weight: 500;
+        font-style: normal;
+      }
+
+      :root {
+        --char: #2d2d2d;
+        --white: #ffffff;
+        --red: #cc0000;
+        --ink: #2d2d2d;
+        --muted: #5f5b59;
+        --soft: #f3f1f0;
+        --line: #e4e0de;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--char);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--char);
+        font-family: "Poppins", sans-serif;
+        font-weight: 700;
+        color: var(--white);
+      }
+
+      /* ---------- scene scaffolding ---------- */
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .cam,
+      .rig {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .dark {
+        background: var(--char);
+      }
+      .light {
+        background: var(--white);
+      }
+      .redbg {
+        background: var(--red);
+      }
+      #s1 {
+        z-index: 1;
+      }
+      #s2 {
+        z-index: 2;
+        opacity: 0;
+      }
+      #s3 {
+        z-index: 3;
+        opacity: 0;
+      }
+      #s4 {
+        z-index: 4;
+        opacity: 0;
+      }
+      #s5 {
+        z-index: 5;
+        opacity: 0;
+        filter: url("#whipblur");
+      }
+      #s6 {
+        z-index: 6;
+        opacity: 0;
+        filter: url("#whipblur");
+      }
+      .abs {
+        position: absolute;
+      }
+      .word {
+        position: absolute;
+        display: block;
+        white-space: nowrap;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+
+      /* Naira sign: Poppins ships no U+20A6, so draw it as N with two strokes */
+      .naira {
+        position: relative;
+        display: inline-block;
+      }
+      .naira::before,
+      .naira::after {
+        content: "";
+        position: absolute;
+        left: -0.08em;
+        right: -0.08em;
+        height: 0.075em;
+        background: currentColor;
+      }
+      .naira::before {
+        top: 0.43em;
+      }
+      .naira::after {
+        top: 0.6em;
+      }
+
+      /* ---------- shared decoratives ---------- */
+      .glow {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(204, 0, 0, 0.55) 0%, rgba(204, 0, 0, 0) 68%);
+      }
+      .ghost {
+        position: absolute;
+        white-space: nowrap;
+        line-height: 1;
+        color: rgba(255, 255, 255, 0.07);
+      }
+      .rule {
+        position: absolute;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.22);
+      }
+      .dots {
+        position: absolute;
+        inset: -80px;
+        background-image: radial-gradient(rgba(45, 45, 45, 0.16) 3px, transparent 3.5px);
+        background-size: 56px 56px;
+      }
+      .grid {
+        position: absolute;
+        inset: -80px;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.06) 2px, transparent 2px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.06) 2px, transparent 2px);
+        background-size: 120px 120px;
+      }
+      .tick {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        background: var(--red);
+      }
+
+      /* ---------- scene 1 ---------- */
+      #s1-over {
+        left: 150px;
+        top: 230px;
+        font-size: 176px;
+      }
+      #s1-low {
+        right: 150px;
+        top: 560px;
+        font-size: 176px;
+        color: #d9d6d4;
+      }
+      #s1-slab {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 380px;
+        height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #s1-slab-inner {
+        display: block;
+        background: var(--red);
+        padding: 36px 96px 44px;
+        font-size: 190px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        color: var(--white);
+      }
+
+      /* ---------- scene 2 ---------- */
+      #s2-row {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 190px;
+        height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 64px;
+      }
+      #s2-markwrap {
+        display: block;
+        width: 404px;
+        height: 320px;
+      }
+      #s2-mark {
+        display: block;
+        width: 404px;
+        height: 320px;
+      }
+      #s2-name {
+        display: flex;
+        font-size: 236px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .ltrbox {
+        display: block;
+        overflow: hidden;
+        padding-bottom: 0.06em;
+      }
+      .ltr {
+        display: block;
+      }
+      #s2-rule {
+        position: absolute;
+        left: 360px;
+        width: 1200px;
+        top: 572px;
+        height: 6px;
+        background: var(--red);
+      }
+      .pair {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 660px;
+        height: 170px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 40px;
+        font-size: 128px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .pair span {
+        display: block;
+        white-space: nowrap;
+      }
+      .ink {
+        color: var(--ink);
+      }
+      .red {
+        color: var(--red);
+      }
+      #s2-ring {
+        position: absolute;
+        left: 560px;
+        top: -260px;
+        width: 800px;
+        height: 800px;
+        border-radius: 50%;
+        border: 4px solid rgba(45, 45, 45, 0.12);
+      }
+
+      /* ---------- scene 3: buyers + phone ---------- */
+      #s3-head {
+        left: 170px;
+        top: 210px;
+        font-size: 190px;
+      }
+      .chip {
+        position: absolute;
+        left: 170px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        padding: 26px 56px 26px 30px;
+        background: var(--white);
+        border-radius: 999px;
+        color: var(--ink);
+        font-size: 66px;
+        line-height: 1;
+        white-space: nowrap;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      }
+      #s3-chip1 {
+        top: 360px;
+      }
+      #s3-chip2 {
+        top: 560px;
+      }
+      .chip-icon {
+        display: block;
+        width: 88px;
+        height: 88px;
+        flex: none;
+      }
+      #s3-phonewrap {
+        position: absolute;
+        left: 1150px;
+        top: 80px;
+        width: 460px;
+        height: 920px;
+      }
+      .phone {
+        position: absolute;
+        inset: 0;
+        border-radius: 70px;
+        background: #151515;
+        padding: 18px;
+        box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+      }
+      .screen {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 54px;
+        overflow: hidden;
+        background: var(--white);
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .ph-top {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 190px;
+        background: var(--white);
+        z-index: 2;
+        border-bottom: 2px solid var(--line);
+      }
+      .ph-bar {
+        position: absolute;
+        left: 26px;
+        right: 26px;
+        top: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .ph-logo {
+        display: block;
+        width: 170px;
+        height: 37px;
+      }
+      .ph-search {
+        position: absolute;
+        left: 26px;
+        right: 26px;
+        top: 116px;
+        height: 54px;
+        border-radius: 27px;
+        background: var(--soft);
+        display: flex;
+        align-items: center;
+        padding-left: 22px;
+        gap: 12px;
+        font-size: 20px;
+        color: var(--muted);
+      }
+      .feed {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 190px;
+        padding: 20px 22px;
+      }
+      .cats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .cat {
+        display: block;
+        padding: 8px 18px;
+        border-radius: 20px;
+        background: var(--soft);
+        font-size: 18px;
+        color: var(--ink);
+      }
+      .cat.on {
+        background: var(--red);
+        color: var(--white);
+      }
+      .banner {
+        height: 120px;
+        border-radius: 22px;
+        background: var(--char);
+        color: var(--white);
+        padding: 20px 24px;
+        margin-bottom: 18px;
+        position: relative;
+        overflow: hidden;
+      }
+      .banner b {
+        display: block;
+        font-weight: 700;
+        font-size: 30px;
+        line-height: 1.1;
+      }
+      .banner i {
+        display: block;
+        font-style: normal;
+        font-size: 18px;
+        color: #d9d6d4;
+        margin-top: 6px;
+      }
+      .banner .bdot {
+        position: absolute;
+        right: -30px;
+        top: -30px;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: var(--red);
+      }
+      .pgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+      .card {
+        border-radius: 20px;
+        border: 2px solid var(--line);
+        overflow: hidden;
+        background: var(--white);
+      }
+      .pimg {
+        height: 150px;
+        background: var(--soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pimg svg {
+        width: 104px;
+        height: 104px;
+        display: block;
+      }
+      .pinfo {
+        padding: 10px 14px 12px;
+      }
+      .pname {
+        display: block;
+        font-size: 17px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .pprice {
+        display: block;
+        font-weight: 700;
+        font-size: 22px;
+        color: var(--ink);
+      }
+      .vtag {
+        display: inline-block;
+        margin-top: 4px;
+        font-size: 14px;
+        color: var(--red);
+      }
+
+      /* ---------- scene 4: vendors + dashboard ---------- */
+      #s4-head {
+        left: 130px;
+        top: 150px;
+        font-size: 128px;
+        display: flex;
+      }
+      #s4-head .ltr {
+        display: block;
+      }
+      #s4-dashwrap {
+        position: absolute;
+        left: 830px;
+        top: 230px;
+        width: 980px;
+        height: 700px;
+      }
+      .dash {
+        position: absolute;
+        inset: 0;
+        border-radius: 32px;
+        background: var(--white);
+        overflow: hidden;
+        display: flex;
+        color: var(--ink);
+        font-weight: 500;
+        box-shadow: 0 40px 120px rgba(0, 0, 0, 0.5);
+      }
+      .side {
+        width: 250px;
+        flex: none;
+        background: var(--soft);
+        padding: 36px 22px;
+      }
+      .side-logo {
+        display: block;
+        width: 200px;
+        height: 44px;
+        margin-bottom: 40px;
+      }
+      .nav {
+        display: block;
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-size: 24px;
+        margin-bottom: 8px;
+        color: var(--muted);
+      }
+      .nav.on {
+        background: var(--red);
+        color: var(--white);
+      }
+      .main {
+        flex: 1;
+        padding: 40px 44px;
+        position: relative;
+      }
+      .lbl {
+        display: block;
+        font-size: 24px;
+        color: var(--muted);
+      }
+      #s4-sales {
+        display: block;
+        font-weight: 700;
+        font-size: 104px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .tiles {
+        display: flex;
+        gap: 22px;
+        margin-top: 22px;
+      }
+      .tile {
+        flex: 1;
+        border: 2px solid var(--line);
+        border-radius: 20px;
+        padding: 18px 22px;
+      }
+      .tile b {
+        display: block;
+        font-weight: 700;
+        font-size: 48px;
+        line-height: 1.1;
+        color: var(--ink);
+      }
+      .chart {
+        position: absolute;
+        left: 44px;
+        right: 44px;
+        bottom: 70px;
+        height: 190px;
+        display: flex;
+        align-items: flex-end;
+        gap: 22px;
+      }
+      .bar {
+        flex: 1;
+        display: block;
+        border-radius: 10px 10px 4px 4px;
+        background: #d9d6d4;
+        transform-origin: 50% 100%;
+      }
+      .bar.hot {
+        background: var(--red);
+      }
+      .days {
+        position: absolute;
+        left: 44px;
+        right: 44px;
+        bottom: 30px;
+        display: flex;
+        gap: 22px;
+        font-size: 20px;
+        color: var(--muted);
+      }
+      .days span {
+        flex: 1;
+        text-align: center;
+        display: block;
+      }
+      #s4-toast {
+        position: absolute;
+        left: 1230px;
+        top: 96px;
+        width: 580px;
+        height: 150px;
+        border-radius: 28px;
+        background: var(--white);
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        padding: 0 30px;
+        color: var(--ink);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+        z-index: 3;
+      }
+      .bell {
+        position: relative;
+        width: 92px;
+        height: 92px;
+        flex: none;
+      }
+      .bell-bg {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--red);
+      }
+      .bell-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 6px solid var(--red);
+      }
+      .bell svg {
+        position: absolute;
+        inset: 18px;
+        width: 56px;
+        height: 56px;
+      }
+      .toast-t {
+        position: relative;
+        z-index: 2;
+      }
+      .toast-t b {
+        display: block;
+        font-size: 50px;
+        line-height: 1.1;
+      }
+      .toast-t i {
+        display: block;
+        font-style: normal;
+        font-weight: 500;
+        font-size: 24px;
+        color: var(--muted);
+      }
+      #s4-badge {
+        position: absolute;
+        left: 170px;
+        top: 470px;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        background: var(--red);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 10px solid var(--white);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+        z-index: 4;
+      }
+      #s4-badge b {
+        display: block;
+        font-size: 168px;
+        line-height: 0.95;
+        letter-spacing: -0.03em;
+      }
+      #s4-badge i {
+        display: block;
+        font-style: normal;
+        font-size: 50px;
+        line-height: 1;
+      }
+
+      /* ---------- scene 5: trust ---------- */
+      .ic {
+        position: absolute;
+        top: 220px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 6px solid var(--char);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ic svg {
+        display: block;
+        width: 200px;
+        height: 200px;
+      }
+      #s5-ic1 {
+        left: 300px;
+      }
+      #s5-ic2 {
+        left: 800px;
+      }
+      #s5-ic3 {
+        left: 1300px;
+      }
+      .slot {
+        position: absolute;
+        top: 220px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        border: 6px dashed rgba(45, 45, 45, 0.28);
+      }
+      #s5-ind {
+        position: absolute;
+        left: 400px;
+        top: 590px;
+        width: 120px;
+        height: 12px;
+        border-radius: 6px;
+        background: var(--red);
+      }
+      .lab {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 680px;
+        display: flex;
+        justify-content: center;
+        font-size: 140px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .lab span {
+        display: block;
+        white-space: nowrap;
+      }
+      #s5-ghost {
+        position: absolute;
+        right: -160px;
+        top: -120px;
+        width: 760px;
+        height: 760px;
+      }
+      #s5-seam,
+      #s6-seam {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 10px;
+        background: var(--white);
+        z-index: 9;
+        opacity: 0;
+      }
+      #s6-seam {
+        left: -5px;
+      }
+
+      /* ---------- scene 6: close ---------- */
+      #s6-plate {
+        position: absolute;
+        left: 560px;
+        top: 110px;
+        width: 800px;
+        height: 200px;
+        border-radius: 36px;
+        background: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 30px 90px rgba(80, 0, 0, 0.35);
+      }
+      #s6-logo {
+        display: block;
+        width: 640px;
+        height: 139px;
+      }
+      #s6-l1,
+      #s6-l2 {
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        font-size: 176px;
+      }
+      #s6-l1 {
+        top: 370px;
+      }
+      #s6-l2 {
+        top: 600px;
+      }
+      #s6-l1 span,
+      #s6-l2 span {
+        display: block;
+        white-space: nowrap;
+      }
+      #s6-pill {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 856px;
+        display: flex;
+        justify-content: center;
+      }
+      #s6-pill span {
+        display: block;
+        background: var(--white);
+        color: var(--red);
+        border-radius: 999px;
+        padding: 18px 64px 22px;
+        font-size: 72px;
+        line-height: 1;
+        white-space: nowrap;
+      }
+      .ghost-r {
+        position: absolute;
+        white-space: nowrap;
+        line-height: 1;
+        color: rgba(255, 255, 255, 0.1);
+      }
+
+      .logo-bg {
+        background: url("assets/logo.svg") center / contain no-repeat;
+      }
+
+      /* scene wipe */
+      #wipe {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        background: var(--red);
+        transform-origin: 0% 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="video"
+      data-start="0"
+      data-duration="30"
+      data-width="1920"
+      data-height="1080"
+    >
+      <audio
+        id="music"
+        src="assets/music.mp3"
+        data-start="0"
+        data-duration="30"
+        data-track-index="9"
+        data-timeline-role="music"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":1},{"t":27.5,"v":1},{"t":30,"v":0}]}]}'
+      ></audio>
+
+      <!-- directional blur for the whip pan (horizontal axis only) -->
+      <svg width="0" height="0" aria-hidden="true" style="position: absolute">
+        <defs>
+          <filter id="whipblur" x="-20%" y="-5%" width="140%" height="110%">
+            <feGaussianBlur id="whipblur-node" in="SourceGraphic" stdDeviation="0 0" />
+          </filter>
+        </defs>
+      </svg>
+
+      <!-- ============ SCENE 1: the problem ============ -->
+      <div class="scene dark" id="s1">
+        <div class="cam" id="cam1">
+          <div class="rig" id="rig1">
+            <div class="glow" id="s1-glow" style="left: -300px; top: 520px; width: 1100px; height: 1100px"></div>
+            <div class="ghost" aria-hidden="true" data-layout-ignore id="s1-ghost" style="right: -40px; top: -160px; font-size: 1200px">?</div>
+            <div class="rule" style="left: 150px; right: 150px; top: 130px"></div>
+            <div class="rule" style="left: 150px; right: 150px; top: 950px"></div>
+            <div class="tick" style="left: 150px; top: 122px"></div>
+            <div class="tick" style="right: 150px; top: 942px"></div>
+            <div class="word" id="s1-over">Overpriced?</div>
+            <div class="word" id="s1-low">Low reach?</div>
+            <div id="s1-slab"><span id="s1-slab-inner">Better way.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 2: brand reveal ============ -->
+      <div class="scene light" id="s2">
+        <div class="cam" id="cam2">
+          <div class="rig" id="rig2">
+            <div class="dots"></div>
+            <div id="s2-ring"></div>
+            <div id="s2-row">
+              <div id="s2-markwrap"><img id="s2-mark" src="assets/logo-mark.svg" alt="AvioMax mark" /></div>
+              <div id="s2-name">
+                <span class="ltrbox"><span class="ltr">A</span></span>
+                <span class="ltrbox"><span class="ltr">V</span></span>
+                <span class="ltrbox"><span class="ltr">I</span></span>
+                <span class="ltrbox"><span class="ltr">O</span></span>
+                <span class="ltrbox"><span class="ltr red">M</span></span>
+                <span class="ltrbox"><span class="ltr red">A</span></span>
+                <span class="ltrbox"><span class="ltr red">X</span></span>
+              </div>
+            </div>
+            <div id="s2-rule"></div>
+            <div class="pair" id="s2-pair1">
+              <span class="ink" id="s2-t1">Empowering.</span>
+              <span class="red" id="s2-t2">Sellers.</span>
+            </div>
+            <div class="pair" id="s2-pair2">
+              <span class="ink" id="s2-t3">Delighting.</span>
+              <span class="red" id="s2-t4">Buyers.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 3: buyers ============ -->
+      <div class="scene dark" id="s3">
+        <div class="cam" id="cam3">
+          <div class="rig" id="rig3">
+            <div class="glow" id="s3-glow" style="left: 880px; top: 40px; width: 1000px; height: 1000px"></div>
+            <div class="ghost" aria-hidden="true" data-layout-ignore style="left: -60px; top: 560px; font-size: 640px"><span class="naira">N</span></div>
+            <div class="rule" style="left: 170px; width: 760px; top: 800px"></div>
+            <div class="tick" style="left: 170px; top: 792px"></div>
+            <div class="word" id="s3-head">Buyers</div>
+
+            <div class="chip" id="s3-chip1">
+              <svg class="chip-icon" viewBox="0 0 88 88">
+                <circle cx="44" cy="44" r="44" fill="#CC0000" />
+                <path d="M25 45 L39 59 L64 31" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Verified sellers</span>
+            </div>
+            <div class="chip" id="s3-chip2">
+              <svg class="chip-icon" viewBox="0 0 88 88">
+                <circle cx="44" cy="44" r="44" fill="#2D2D2D" />
+                <path d="M22 34 L44 23 L66 34 L66 58 L44 69 L22 58 Z" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round" />
+                <path d="M22 34 L44 45 L66 34 M44 45 L44 69" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round" />
+                <path d="M33 28.5 L55 39.5" stroke="#CC0000" stroke-width="6" />
+              </svg>
+              <span>Delivered</span>
+            </div>
+
+            <div id="s3-phonewrap">
+              <div class="phone">
+                <div class="screen">
+                  <div class="ph-top" data-layout-allow-occlusion>
+                    <div class="ph-bar">
+                      <svg width="34" height="28" viewBox="0 0 34 28"><rect y="0" width="34" height="4" rx="2" fill="#2D2D2D" /><rect y="12" width="34" height="4" rx="2" fill="#2D2D2D" /><rect y="24" width="22" height="4" rx="2" fill="#2D2D2D" /></svg>
+                      <div class="ph-logo logo-bg"></div>
+                      <svg width="36" height="34" viewBox="0 0 36 34"><path d="M2 3 H8 L12 22 H30 L34 8 H10" fill="none" stroke="#2D2D2D" stroke-width="3.5" stroke-linejoin="round" /><circle cx="14" cy="29" r="3" fill="#2D2D2D" /><circle cx="28" cy="29" r="3" fill="#2D2D2D" /><circle cx="31" cy="5" r="5" fill="#CC0000" /></svg>
+                    </div>
+                    <div class="ph-search">
+                      <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="9" cy="9" r="7" fill="none" stroke="#5F5B59" stroke-width="3" /><path d="M14 14 L20 20" stroke="#5F5B59" stroke-width="3" stroke-linecap="round" /></svg>
+                      <span>Search products</span>
+                    </div>
+                  </div>
+                  <div class="feed" id="s3-feed" data-layout-ignore>
+                    <div class="cats"><span class="cat on">All</span><span class="cat">Fashion</span><span class="cat">Phones</span><span class="cat">Home</span></div>
+                    <div class="banner"><div class="bdot"></div><b>Weekend deals</b><i>Top stores, fast delivery</i></div>
+                    <div class="pgrid">
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><path d="M38 12 L62 12 L60 30 L74 88 L26 88 L40 30 Z" fill="#CC0000" /><path d="M40 30 L60 30" stroke="#2D2D2D" stroke-width="5" /><path d="M34 60 L66 60" stroke="#fff" stroke-width="3" stroke-dasharray="4 5" /></svg></div><div class="pinfo"><span class="pname">Ankara dress</span><span class="pprice"><span class="naira">N</span>18,500</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><path d="M10 64 L14 44 L34 40 L50 52 L80 58 Q92 62 90 74 L10 74 Z" fill="#2D2D2D" /><path d="M10 74 L90 74 L90 80 L10 80 Z" fill="#CC0000" /><path d="M30 46 L36 56 M40 48 L46 58" stroke="#fff" stroke-width="3" /></svg></div><div class="pinfo"><span class="pname">Sneakers</span><span class="pprice"><span class="naira">N</span>32,000</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><path d="M22 58 Q22 20 50 20 Q78 20 78 58" fill="none" stroke="#2D2D2D" stroke-width="7" /><rect x="14" y="52" width="18" height="30" rx="8" fill="#CC0000" /><rect x="68" y="52" width="18" height="30" rx="8" fill="#CC0000" /></svg></div><div class="pinfo"><span class="pname">Headphones</span><span class="pprice"><span class="naira">N</span>24,900</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><path d="M36 38 Q36 18 50 18 Q64 18 64 38" fill="none" stroke="#2D2D2D" stroke-width="6" /><rect x="20" y="36" width="60" height="48" rx="10" fill="#2D2D2D" /><rect x="44" y="50" width="12" height="10" rx="2" fill="#CC0000" /></svg></div><div class="pinfo"><span class="pname">Leather bag</span><span class="pprice"><span class="naira">N</span>27,000</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><rect x="38" y="8" width="24" height="84" rx="8" fill="#2D2D2D" /><circle cx="50" cy="50" r="24" fill="#2D2D2D" /><circle cx="50" cy="50" r="18" fill="#fff" /><path d="M50 38 L50 50 L58 55" stroke="#CC0000" stroke-width="4" stroke-linecap="round" fill="none" /></svg></div><div class="pinfo"><span class="pname">Smart watch</span><span class="pprice"><span class="naira">N</span>45,000</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><rect x="42" y="12" width="16" height="14" rx="3" fill="#2D2D2D" /><rect x="26" y="26" width="48" height="62" rx="14" fill="#CC0000" /><rect x="36" y="46" width="28" height="22" rx="4" fill="#fff" /></svg></div><div class="pinfo"><span class="pname">Perfume</span><span class="pprice"><span class="naira">N</span>15,500</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><rect x="30" y="8" width="40" height="84" rx="9" fill="#2D2D2D" /><rect x="35" y="16" width="30" height="62" rx="3" fill="#CC0000" /><circle cx="50" cy="85" r="3" fill="#fff" /></svg></div><div class="pinfo"><span class="pname">Smartphone</span><span class="pprice"><span class="naira">N</span>189,000</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><path d="M18 62 Q18 26 50 26 Q82 26 82 62 Z" fill="#CC0000" /><path d="M14 62 L92 62 Q94 72 80 72 L14 72 Z" fill="#2D2D2D" /><circle cx="50" cy="26" r="4" fill="#2D2D2D" /></svg></div><div class="pinfo"><span class="pname">Cap</span><span class="pprice"><span class="naira">N</span>6,500</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><path d="M26 30 L74 30 L70 88 L30 88 Z" fill="#2D2D2D" /><path d="M36 30 Q36 14 50 14 Q64 14 64 30" fill="none" stroke="#CC0000" stroke-width="6" /></svg></div><div class="pinfo"><span class="pname">Tote bag</span><span class="pprice"><span class="naira">N</span>9,800</span></div></div>
+                      <div class="card"><div class="pimg"><svg viewBox="0 0 100 100"><rect x="12" y="22" width="76" height="50" rx="6" fill="#2D2D2D" /><rect x="18" y="28" width="64" height="38" rx="2" fill="#CC0000" /><rect x="6" y="74" width="88" height="8" rx="4" fill="#2D2D2D" /></svg></div><div class="pinfo"><span class="pname">Laptop</span><span class="pprice"><span class="naira">N</span>520,000</span></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 4: vendors ============ -->
+      <div class="scene dark" id="s4">
+        <div class="cam" id="cam4">
+          <div class="rig" id="rig4">
+            <div class="grid"></div>
+            <div class="glow" style="left: 1000px; top: 300px; width: 1100px; height: 1100px"></div>
+            <div class="word" id="s4-head">
+              <span class="ltrbox"><span class="ltr">V</span></span>
+              <span class="ltrbox"><span class="ltr">e</span></span>
+              <span class="ltrbox"><span class="ltr">n</span></span>
+              <span class="ltrbox"><span class="ltr">d</span></span>
+              <span class="ltrbox"><span class="ltr">o</span></span>
+              <span class="ltrbox"><span class="ltr">r</span></span>
+              <span class="ltrbox"><span class="ltr">s</span></span>
+            </div>
+            <div id="s4-dashwrap">
+              <div class="dash">
+                <div class="side">
+                  <div class="side-logo logo-bg"></div>
+                  <span class="nav on">Dashboard</span>
+                  <span class="nav">Products</span>
+                  <span class="nav">Orders</span>
+                  <span class="nav">Payouts</span>
+                </div>
+                <div class="main">
+                  <span class="lbl">Total sales</span>
+                  <span id="s4-sales"><span class="naira">N</span><span id="s4-num">0</span></span>
+                  <div class="tiles">
+                    <div class="tile"><span class="lbl">Orders</span><b id="s4-orders">35</b></div>
+                    <div class="tile"><span class="lbl">Store views</span><b>1,240</b></div>
+                  </div>
+                  <div class="chart">
+                    <span class="bar" style="height: 42%"></span>
+                    <span class="bar" style="height: 58%"></span>
+                    <span class="bar" style="height: 36%"></span>
+                    <span class="bar" style="height: 70%"></span>
+                    <span class="bar" style="height: 62%"></span>
+                    <span class="bar" style="height: 84%"></span>
+                    <span class="bar hot" style="height: 100%"></span>
+                  </div>
+                  <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+                </div>
+              </div>
+            </div>
+            <div id="s4-toast">
+              <div class="bell">
+                <div class="bell-ring" id="s4-ring1"></div>
+                <div class="bell-ring" id="s4-ring2"></div>
+                <div class="bell-bg"></div>
+                <svg viewBox="0 0 56 56"><path d="M28 8 Q42 8 42 24 L42 36 L47 42 L9 42 L14 36 L14 24 Q14 8 28 8 Z" fill="#fff" /><circle cx="28" cy="47" r="5" fill="#fff" /></svg>
+              </div>
+              <div class="toast-t"><b>New order!</b><i>Ankara dress, Lagos</i></div>
+            </div>
+            <div id="s4-badge"><b>6%</b><i>commission</i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 5: trust ============ -->
+      <div class="scene light" id="s5">
+        <div class="cam" id="cam5">
+          <div class="rig" id="rig5">
+            <div class="dots"></div>
+            <svg id="s5-ghost" viewBox="0 0 100 100"><path d="M50 6 L88 20 L88 48 Q88 78 50 94 Q12 78 12 48 L12 20 Z" fill="none" stroke="rgba(45,45,45,0.08)" stroke-width="5" /></svg>
+            <div class="slot" id="s5-slot1" style="left: 300px"></div>
+            <div class="slot" id="s5-slot2" style="left: 800px"></div>
+            <div class="slot" id="s5-slot3" style="left: 1300px"></div>
+            <div class="ic" id="s5-ic1">
+              <svg viewBox="0 0 200 200">
+                <path d="M100 10 L122 26 L149 24 L158 50 L181 64 L172 90 L181 116 L158 130 L149 156 L122 154 L100 170 L78 154 L51 156 L42 130 L19 116 L28 90 L19 64 L42 50 L51 24 L78 26 Z" fill="#CC0000" />
+                <path d="M62 92 L88 118 L140 66" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M70 160 L60 196 L82 186 L96 198 L100 172 M130 160 L140 196 L118 186 L104 198 L100 172" fill="#2D2D2D" />
+              </svg>
+            </div>
+            <div class="ic" id="s5-ic2">
+              <svg viewBox="0 0 200 200">
+                <path d="M100 12 L172 38 L172 96 Q172 156 100 190 Q28 156 28 96 L28 38 Z" fill="#2D2D2D" />
+                <rect x="70" y="92" width="60" height="50" rx="8" fill="#CC0000" />
+                <path d="M80 92 L80 76 Q80 58 100 58 Q120 58 120 76 L120 92" fill="none" stroke="#fff" stroke-width="10" />
+                <circle cx="100" cy="114" r="7" fill="#fff" />
+              </svg>
+            </div>
+            <div class="ic" id="s5-ic3">
+              <svg viewBox="0 0 200 200">
+                <path d="M100 20 L176 56 L176 146 L100 182 L24 146 L24 56 Z" fill="#2D2D2D" />
+                <path d="M24 56 L100 92 L176 56" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" />
+                <path d="M100 92 L100 182" stroke="#fff" stroke-width="6" />
+                <path d="M62 38 L138 74 L138 104 L122 96 L122 82 L62 54 Z" fill="#CC0000" />
+              </svg>
+            </div>
+            <div id="s5-ind"></div>
+            <div class="lab" id="s5-l1"><span>Verified</span></div>
+            <div class="lab" id="s5-l2"><span class="red">Paystack</span><span>&nbsp;secure</span></div>
+            <div class="lab" id="s5-l3"><span>Buyer</span><span class="red">&nbsp;protection</span></div>
+          </div>
+        </div>
+        <div id="s5-seam" style="right: -5px"></div>
+      </div>
+
+      <!-- ============ SCENE 6: close ============ -->
+      <div class="scene redbg" id="s6">
+        <div class="cam" id="cam6">
+          <div class="rig" id="rig6">
+            <div class="ghost-r" aria-hidden="true" data-layout-ignore id="s6-ghost" style="left: 0; top: 700px; font-size: 520px">AVIOMAX</div>
+            <div id="s6-plate"><img id="s6-logo" src="assets/logo.svg" alt="AvioMax" /></div>
+            <div class="word" id="s6-l1"><span id="s6-w1">Shop smart.</span></div>
+            <div class="word" id="s6-l2"><span id="s6-w2">Sell big.</span></div>
+            <div id="s6-pill"><span id="s6-url">aviomax.store</span></div>
+          </div>
+        </div>
+        <div id="s6-seam"></div>
+      </div>
+
+      <div id="wipe"></div>
+    </div>
+
+    <script>
+      // Strong beats from `npx hyperframes beats` (beats/assets/music.mp3.json,
+      // strength >= 0.6). 96 BPM: quarter notes every 0.625 s from 2.5 s.
+      // Swap in the real track, rerun beats, and update this list.
+      const B = [
+        0, 1.25, 2.5, 3.125, 3.75, 4.375, 5.0, 5.625, 6.25, 6.875, 7.5, 8.125, 8.75, 9.375, 10.0,
+        10.625, 11.25, 11.875, 12.5, 13.125, 13.75, 14.375, 15.0, 15.625, 16.25, 16.875, 17.5,
+        18.125, 18.75, 19.375, 20.0, 20.625, 21.25, 21.875, 22.5, 23.125, 23.75, 24.375, 25.0,
+        25.625, 26.25, 26.875, 27.5,
+      ];
+      const beat = (t) => B.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));
+      // start time so a tween of duration d lands exactly on the beat nearest t
+      const land = (t, d) => beat(t) - d;
+
+      const tl = gsap.timeline({ paused: true });
+
+      // initial scene / helper states
+      tl.set("#wipe", { scaleX: 0, transformOrigin: "0% 50%" }, 0);
+
+      // ---------------------------------------------------------------
+      // SCENE 1 (0 - 5): Overpriced? / Low reach? / Better way.
+      // ---------------------------------------------------------------
+      tl.fromTo("#cam1", { scale: 1, x: 0 }, { scale: 1.06, x: -30, duration: 4.6, ease: "none" }, 0);
+      tl.fromTo("#s1-glow", { scale: 0.85, opacity: 0.6 }, { scale: 1.1, opacity: 1, duration: 4.6, ease: "sine.inOut" }, 0);
+      tl.fromTo("#s1-ghost", { y: 0, rotation: 0 }, { y: 60, rotation: 6, duration: 4.6, ease: "none" }, 0);
+
+      // side snap from the left
+      tl.fromTo("#s1-over", { x: -1500, skewX: 28 }, { x: 0, skewX: 0, duration: 0.3, ease: "expo.out" }, 0);
+      // drop from the top, lands on beat 1.25
+      tl.fromTo("#s1-low", { y: -820 }, { y: 0, duration: 0.32, ease: "back.out(1.4)" }, land(1.25, 0.28));
+      // both get knocked out on beat 2.5
+      tl.to(["#s1-over", "#s1-low"], { scale: 1.07, duration: 0.06, ease: "power2.out" }, 2.5);
+      tl.to(["#s1-over", "#s1-low"], { scale: 1, duration: 0.25, ease: "power2.out" }, 2.56);
+      tl.to("#s1-over", { x: -1700, skewX: 20, duration: 0.22, ease: "power3.in" }, land(3.125, 0.2));
+      tl.to("#s1-low", { y: 760, duration: 0.22, ease: "power3.in" }, land(3.125, 0.2));
+      // "Better way." scale slam on 3.125
+      tl.fromTo(
+        "#s1-slab-inner",
+        { scale: 4.2, rotation: -9, opacity: 0 },
+        { scale: 1, rotation: -3, opacity: 1, duration: 0.2, ease: "power4.in" },
+        land(3.125, 0.2),
+      );
+      tl.fromTo("#rig1", { x: 0, y: 0 }, { x: 16, y: -10, duration: 0.05, ease: "none", yoyo: true, repeat: 3 }, 3.125);
+      // beat punches
+      [3.75, 4.375].forEach((t) => {
+        tl.to("#s1-slab-inner", { scale: 1.06, duration: 0.06, ease: "power2.out" }, t);
+        tl.to("#s1-slab-inner", { scale: 1, duration: 0.24, ease: "power2.out" }, t + 0.06);
+      });
+
+      // TRANSITION 1 -> 2: zoom through the red slab
+      tl.set("#s1", { transformOrigin: "960px 668px" }, 0);
+      tl.to("#s1", { scale: 11, duration: 0.34, ease: "power3.in" }, 4.5);
+      tl.set("#s2", { opacity: 1 }, 4.84);
+      tl.set("#s1", { opacity: 0 }, 4.84);
+      tl.fromTo("#s2", { scale: 1.35 }, { scale: 1, duration: 0.5, ease: "power3.out", immediateRender: false }, 4.84);
+
+      // ---------------------------------------------------------------
+      // SCENE 2 (5 - 10): logo slam, AVIOMAX, tagline one word per beat
+      // ---------------------------------------------------------------
+      tl.fromTo("#cam2", { scale: 1, x: 24 }, { scale: 1.05, x: -24, duration: 5.2, ease: "none" }, 4.84);
+      tl.fromTo("#s2-ring", { scale: 0.9, rotation: 0 }, { scale: 1.08, rotation: 20, duration: 5.2, ease: "sine.inOut" }, 4.84);
+      // logo mark: scale slam with spin, lands on 5.0
+      tl.fromTo(
+        "#s2-mark",
+        { scale: 3.4, rotation: 28, opacity: 0 },
+        { scale: 1, rotation: 0, opacity: 1, duration: 0.22, ease: "power4.in" },
+        land(5.0, 0.22),
+      );
+      tl.to("#s2-mark", { scaleX: 1.12, scaleY: 0.88, duration: 0.06, ease: "power2.out" }, 5.0);
+      tl.to("#s2-mark", { scaleX: 1, scaleY: 1, duration: 0.35, ease: "elastic.out(1, 0.4)" }, 5.06);
+      // mark starts centred alone, slides left to make room for the name
+      tl.fromTo("#s2-markwrap", { x: 628 }, { x: 0, duration: 0.34, ease: "power3.inOut" }, 5.3);
+      // AVIOMAX: letters rise out of a mask, first letter on 5.625
+      tl.fromTo(
+        "#s2-name .ltr",
+        { yPercent: 118 },
+        { yPercent: 0, duration: 0.3, ease: "power4.out", stagger: 0.04 },
+        land(5.625, 0.18),
+      );
+      tl.fromTo("#s2-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "expo.out", transformOrigin: "50% 50%" }, beat(6.25));
+      // tagline, one word per beat
+      tl.fromTo("#s2-t1", { y: 190, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, land(7.5, 0.2));
+      tl.fromTo("#s2-t2", { x: 1100, skewX: -22, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.28, ease: "expo.out" }, land(8.125, 0.12));
+      tl.to("#s2-pair1", { y: -120, opacity: 0, duration: 0.2, ease: "power2.in" }, 8.45);
+      tl.fromTo("#s2-t3", { y: -330, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.6)" }, land(8.75, 0.2));
+      tl.fromTo("#s2-t4", { scale: 0, rotation: -16 }, { scale: 1, rotation: 0, duration: 0.32, ease: "back.out(2.4)" }, land(9.375, 0.16));
+
+      // TRANSITION 2 -> 3: push left
+      tl.set("#s3", { opacity: 1 }, 9.6);
+      tl.to("#s2", { x: -1920, duration: 0.42, ease: "power3.inOut" }, 9.6);
+      tl.fromTo("#s3", { x: 1920 }, { x: 0, duration: 0.42, ease: "power3.inOut", immediateRender: false }, 9.6);
+      tl.set("#s2", { opacity: 0 }, 10.02);
+
+      // ---------------------------------------------------------------
+      // SCENE 3 (10 - 15): buyers, phone home screen, chips
+      // ---------------------------------------------------------------
+      tl.fromTo("#cam3", { scale: 1.05, x: -20 }, { scale: 1, x: 20, duration: 5.4, ease: "none" }, 9.6);
+      tl.fromTo("#s3-glow", { scale: 0.9, opacity: 0.7 }, { scale: 1.12, opacity: 1, duration: 5.4, ease: "sine.inOut" }, 9.6);
+      tl.fromTo("#s3-phonewrap", { rotation: -4, y: 20 }, { rotation: 2, y: -20, duration: 5.4, ease: "sine.inOut" }, 9.6);
+      // heading: flips up from its baseline
+      tl.fromTo(
+        "#s3-head",
+        { rotationX: -95, opacity: 0, transformOrigin: "50% 100%", transformPerspective: 900 },
+        { rotationX: 0, opacity: 1, duration: 0.34, ease: "power3.out" },
+        land(10.625, 0.22),
+      );
+      tl.to("#s3-head", { y: -160, opacity: 0, duration: 0.22, ease: "power2.in" }, 11.5);
+      // product feed scrolls a row on strong beats
+      [11.25, 12.5, 13.75].forEach((t, i) => {
+        tl.to("#s3-feed", { y: -(i + 1) * 262, duration: 0.34, ease: "power3.inOut" }, land(t, 0.3));
+      });
+      // chips rise one at a time
+      tl.fromTo(
+        "#s3-chip1",
+        { y: 170, scale: 0.6, opacity: 0 },
+        { y: 0, scale: 1, opacity: 1, duration: 0.38, ease: "back.out(1.8)" },
+        land(11.875, 0.24),
+      );
+      tl.fromTo(
+        "#s3-chip2",
+        { y: 260, rotation: 9, opacity: 0 },
+        { y: 0, rotation: 0, opacity: 1, duration: 0.36, ease: "power4.out" },
+        land(13.125, 0.18),
+      );
+      [13.75, 14.375].forEach((t) => {
+        tl.to("#s3-chip1 .chip-icon, #s3-chip2 .chip-icon", { scale: 1.16, duration: 0.06, ease: "power2.out" }, t);
+        tl.to("#s3-chip1 .chip-icon, #s3-chip2 .chip-icon", { scale: 1, duration: 0.24, ease: "power2.out" }, t + 0.06);
+      });
+
+      // TRANSITION 3 -> 4: vertical push up
+      tl.set("#s4", { opacity: 1 }, 14.6);
+      tl.to("#s3", { y: -1080, duration: 0.4, ease: "power4.inOut" }, 14.6);
+      tl.fromTo("#s4", { y: 1080 }, { y: 0, duration: 0.4, ease: "power4.inOut", immediateRender: false }, 14.6);
+      tl.set("#s3", { opacity: 0 }, 15.0);
+
+      // ---------------------------------------------------------------
+      // SCENE 4 (15 - 20): vendors, dashboard, order ping, 6% badge
+      // ---------------------------------------------------------------
+      tl.fromTo("#cam4", { scale: 1, y: 12 }, { scale: 1.05, y: -12, duration: 5.4, ease: "none" }, 14.6);
+      // heading letters drop in
+      tl.fromTo(
+        "#s4-head .ltr",
+        { yPercent: -120, opacity: 0 },
+        { yPercent: 0, opacity: 1, duration: 0.28, ease: "power3.out", stagger: 0.035 },
+        land(15.625, 0.28),
+      );
+      // dashboard settles with a tilt
+      tl.fromTo(
+        "#s4-dashwrap",
+        { rotationY: -22, x: 160, transformPerspective: 1600, transformOrigin: "100% 50%" },
+        { rotationY: 0, x: 0, duration: 0.7, ease: "power3.out" },
+        14.8,
+      );
+      tl.fromTo(".bar", { scaleY: 0 }, { scaleY: 1, duration: 0.4, ease: "power3.out", stagger: 0.06 }, 15.35);
+      // "New order!" pings in on 16.25
+      tl.fromTo("#s4-toast", { y: -300, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "back.out(1.7)" }, land(16.25, 0.22));
+      tl.fromTo("#s4-ring1", { scale: 1, opacity: 0.9 }, { scale: 2.4, opacity: 0, duration: 0.6, ease: "power2.out" }, 16.25);
+      tl.fromTo("#s4-ring2", { scale: 1, opacity: 0.9 }, { scale: 2.4, opacity: 0, duration: 0.6, ease: "power2.out" }, 16.875);
+      // sales count up (deterministic: value derives from tween progress)
+      const sales = { v: 0 };
+      const numEl = document.getElementById("s4-num");
+      tl.to(
+        sales,
+        {
+          v: 485000,
+          duration: 1.25,
+          ease: "power2.out",
+          onUpdate: () => {
+            numEl.textContent = Math.round(sales.v / 100) * 100 === 0 ? "0" : (Math.round(sales.v / 100) * 100).toLocaleString("en-US");
+          },
+        },
+        16.25,
+      );
+      const orders = { v: 35 };
+      const ordEl = document.getElementById("s4-orders");
+      tl.to(orders, { v: 36, duration: 0.05, ease: "none", onUpdate: () => (ordEl.textContent = String(Math.round(orders.v))) }, 16.25);
+      tl.fromTo(".bar.hot", { scaleY: 1 }, { scaleY: 1.14, duration: 0.3, ease: "back.out(2)", immediateRender: false }, 16.3);
+      // toast snaps away before the badge lands
+      tl.to("#s4-toast", { x: 760, opacity: 0, duration: 0.24, ease: "power3.in" }, 17.55);
+      // 6% commission: stamp slam on 18.125
+      tl.fromTo(
+        "#s4-badge",
+        { scale: 5, rotation: -45, opacity: 0 },
+        { scale: 1, rotation: -8, opacity: 1, duration: 0.22, ease: "power4.in" },
+        land(18.125, 0.22),
+      );
+      tl.fromTo("#rig4", { x: 0, y: 0 }, { x: -14, y: 12, duration: 0.05, ease: "none", yoyo: true, repeat: 3 }, 18.125);
+      [18.75, 19.375].forEach((t) => {
+        tl.to("#s4-badge", { scale: 1.07, duration: 0.06, ease: "power2.out" }, t);
+        tl.to("#s4-badge", { scale: 1, duration: 0.24, ease: "power2.out" }, t + 0.06);
+      });
+
+      // TRANSITION 4 -> 5: red wipe
+      tl.to("#wipe", { scaleX: 1, duration: 0.38, ease: "power3.in" }, 19.57);
+      tl.set("#s4", { opacity: 0 }, 19.95);
+      tl.set("#s5", { opacity: 1 }, 19.95);
+      tl.set("#wipe", { transformOrigin: "100% 50%" }, 19.95);
+      tl.to("#wipe", { scaleX: 0, duration: 0.4, ease: "power3.out" }, 19.95);
+
+      // ---------------------------------------------------------------
+      // SCENE 5 (20 - 25): trust icons drop one by one
+      // ---------------------------------------------------------------
+      tl.fromTo("#cam5", { scale: 1.05, x: 22 }, { scale: 1, x: -22, duration: 5.1, ease: "none" }, 19.95);
+      tl.fromTo("#s5-ghost", { rotation: -8, scale: 0.95 }, { rotation: 6, scale: 1.05, duration: 5.1, ease: "sine.inOut" }, 19.95);
+      tl.fromTo(".slot", { rotation: 0 }, { rotation: 90, duration: 5.1, ease: "none" }, 19.95);
+      // icon 1: straight hard drop + squash, lands 20.625
+      tl.fromTo("#s5-ic1", { y: -820 }, { y: 0, duration: 0.28, ease: "power4.in" }, land(20.625, 0.28));
+      tl.to("#s5-ic1", { scaleX: 1.14, scaleY: 0.86, duration: 0.06, ease: "power2.out", transformOrigin: "50% 100%" }, 20.625);
+      tl.to("#s5-ic1", { scaleX: 1, scaleY: 1, duration: 0.4, ease: "elastic.out(1, 0.35)" }, 20.685);
+      tl.fromTo("#s5-ind", { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: "expo.out" }, 20.625);
+      tl.fromTo("#s5-l1", { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2)" }, 20.66);
+      // icon 2: spinning drop, lands 21.875
+      tl.to("#s5-l1", { x: -500, opacity: 0, duration: 0.2, ease: "power3.in" }, 21.62);
+      tl.fromTo("#s5-ic2", { y: -820, rotation: -200 }, { y: 0, rotation: 0, duration: 0.3, ease: "power3.in" }, land(21.875, 0.3));
+      tl.to("#s5-ic1", { opacity: 0.35, duration: 0.3, ease: "power1.out" }, 21.875);
+      tl.to("#s5-ind", { x: 500, duration: 0.3, ease: "power3.inOut" }, land(21.875, 0.15));
+      tl.fromTo("#s5-l2", { x: 900, skewX: -22, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, 21.9);
+      // icon 3: tilted drop with a bounce, lands 23.125
+      tl.to("#s5-l2", { y: -110, opacity: 0, duration: 0.2, ease: "power3.in" }, 22.87);
+      tl.fromTo("#s5-ic3", { y: -820, rotation: 28 }, { y: 0, rotation: 0, duration: 0.3, ease: "power2.in" }, land(23.125, 0.3));
+      tl.to("#s5-ic3", { y: -46, duration: 0.14, ease: "power2.out" }, 23.125);
+      tl.to("#s5-ic3", { y: 0, duration: 0.18, ease: "bounce.out" }, 23.265);
+      tl.to("#s5-ic2", { opacity: 0.35, duration: 0.3, ease: "power1.out" }, 23.125);
+      tl.to("#s5-ind", { x: 1000, duration: 0.3, ease: "power3.inOut" }, land(23.125, 0.15));
+      tl.fromTo("#s5-l3", { y: 160, opacity: 0 }, { y: 0, opacity: 1, duration: 0.34, ease: "power3.out" }, 23.15);
+      // all three light up together on 23.75
+      tl.to(["#s5-ic1", "#s5-ic2"], { opacity: 1, duration: 0.2, ease: "power1.out" }, 23.75);
+      tl.fromTo(["#s5-ic1", "#s5-ic2", "#s5-ic3"], { scale: 1.1 }, { scale: 1, duration: 0.4, ease: "power3.out", immediateRender: false }, 23.75);
+
+      // TRANSITION 5 -> 6: whip pan left with directional motion blur
+      const WHIP_AT = 24.45;
+      const WHIP = 0.55;
+      const blurNode = document.getElementById("whipblur-node");
+      const blur = { v: 0 };
+      const writeBlur = () => blurNode.setAttribute("stdDeviation", blur.v.toFixed(2) + " 0");
+      writeBlur();
+      tl.set("#s6", { opacity: 1 }, WHIP_AT);
+      tl.to("#s5", { x: -1920, duration: WHIP, ease: "power3.inOut" }, WHIP_AT);
+      tl.fromTo("#s6", { x: 1920 }, { x: 0, duration: WHIP, ease: "power3.inOut", immediateRender: false }, WHIP_AT);
+      tl.to(blur, { v: 40, duration: WHIP / 2, ease: "power3.in", onUpdate: writeBlur }, WHIP_AT);
+      tl.to(blur, { v: 0, duration: WHIP / 2, ease: "power3.out", onUpdate: writeBlur }, WHIP_AT + WHIP / 2);
+      tl.to(["#s5-seam", "#s6-seam"], { opacity: 1, duration: 0.08, ease: "none" }, WHIP_AT);
+      tl.to(["#s5-seam", "#s6-seam"], { opacity: 0, duration: 0.12, ease: "none" }, WHIP_AT + WHIP - 0.12);
+      tl.set("#s5", { opacity: 0 }, WHIP_AT + WHIP);
+
+      // ---------------------------------------------------------------
+      // SCENE 6 (25 - 30): red close, logo lockup, message, URL
+      // ---------------------------------------------------------------
+      tl.fromTo("#cam6", { scale: 1 }, { scale: 1.06, duration: 5.55, ease: "none" }, WHIP_AT);
+      tl.fromTo("#s6-ghost", { x: 200 }, { x: -700, duration: 5.55, ease: "none" }, WHIP_AT);
+      tl.fromTo("#s6-plate", { scale: 1.12 }, { scale: 1, duration: 0.4, ease: "power3.out", immediateRender: false }, 25.0);
+      // "Shop smart." scale slam on 25.625
+      tl.fromTo("#s6-w1", { scale: 3.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power4.in" }, land(25.625, 0.2));
+      tl.fromTo("#rig6", { x: 0, y: 0 }, { x: 14, y: -10, duration: 0.05, ease: "none", yoyo: true, repeat: 3 }, 25.625);
+      // "Sell big." snaps in from the right on 26.25
+      tl.fromTo("#s6-w2", { x: 1300, skewX: -26, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.28, ease: "expo.out" }, land(26.25, 0.12));
+      tl.to("#s6-w2", { scale: 1.08, duration: 0.06, ease: "power2.out" }, 26.875);
+      tl.to("#s6-w2", { scale: 1, duration: 0.26, ease: "power2.out" }, 26.935);
+      // aviomax.store pill rises on 27.5
+      tl.fromTo("#s6-url", { y: 220, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "back.out(1.6)" }, land(27.5, 0.26));
+      [28.125, 28.75].forEach((t) => {
+        tl.to("#s6-url", { scale: 1.06, duration: 0.06, ease: "power2.out" }, t);
+        tl.to("#s6-url", { scale: 1, duration: 0.26, ease: "power2.out" }, t + 0.06);
+      });
+
+      window.__timelines["video"] = tl;
+    </script>
+  </body>
+</html>
