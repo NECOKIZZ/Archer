@@ -1,0 +1,1661 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Kickoff: Close still pays.</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+  </head>
+  <body>
+    <style>
+      @font-face {
+        font-family: "Clash Display";
+        src: url("assets/fonts/ClashDisplay-Semibold.ttf") format("truetype");
+        font-weight: 600;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "Fraunces";
+        src: url("assets/fonts/Fraunces-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+      }
+
+      :root {
+        --black: #000000;
+        --cream: #f7f5f0;
+        --white: #ffffff;
+        --accent: #7b62f6;
+        --grey: #9a9a9a;
+        --line: #2a2a2a;
+        --panel: #0c0c0c;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--black);
+      }
+      #kick {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--black);
+        font-family: "Clash Display", sans-serif;
+        font-weight: 600;
+        color: var(--white);
+      }
+
+      /* ---------- scene scaffolding ---------- */
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        opacity: 0;
+      }
+      #s1 {
+        opacity: 1;
+      }
+      .cam {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+      .abs {
+        position: absolute;
+        display: block;
+      }
+      .serif {
+        font-family: "Fraunces", serif;
+        font-weight: 700;
+      }
+      .acc {
+        color: var(--accent);
+      }
+      .glowbg {
+        position: absolute;
+        width: 1400px;
+        height: 1400px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(123, 98, 246, 0.26) 0%, rgba(123, 98, 246, 0) 62%);
+      }
+      .word {
+        display: inline-block;
+        white-space: nowrap;
+      }
+
+      /* ---------- scene 1 ---------- */
+      #s1-yes {
+        left: 170px;
+        top: 250px;
+        font-size: 190px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      #s1-boring {
+        left: 170px;
+        top: 480px;
+        font-size: 230px;
+        line-height: 1;
+        color: var(--grey);
+      }
+      #s1-call {
+        left: 0;
+        top: 250px;
+        width: 1920px;
+        text-align: center;
+      }
+      #s1-call .l1 {
+        display: block;
+        font-size: 190px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      #s1-call .l2 {
+        display: block;
+        font-size: 300px;
+        line-height: 1;
+        margin-top: 50px;
+      }
+
+      /* ---------- scoreline grid (scenes 2, 3) ---------- */
+      #gridblock {
+        left: 200px;
+        top: 196px;
+        width: 608px;
+        height: 688px;
+        transform-origin: 0 0;
+      }
+      #gridhead {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 608px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 30px;
+        color: var(--white);
+      }
+      #gridhead .team {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      #gridhead img {
+        width: 48px;
+        height: 48px;
+        display: block;
+      }
+      #gridhead .vs {
+        font-size: 22px;
+        color: var(--grey);
+        letter-spacing: 0.12em;
+      }
+      .grid {
+        position: absolute;
+      }
+      #grid {
+        left: 0;
+        top: 80px;
+        width: 608px;
+        height: 608px;
+      }
+      .cell {
+        position: absolute;
+        border-radius: 18px;
+        background: #0e0e0e;
+        border: 2px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .cell .glow {
+        position: absolute;
+        inset: -2px;
+        border-radius: 18px;
+        background: var(--accent);
+        box-shadow: 0 0 44px rgba(123, 98, 246, 0.9);
+        opacity: 0;
+      }
+      .cell .lbl {
+        position: relative;
+        font-size: 34px;
+        color: #ececec;
+        letter-spacing: 0.02em;
+      }
+      #ripple {
+        left: 316px;
+        top: 512px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid var(--accent);
+        opacity: 0;
+      }
+      #cursor {
+        left: 0;
+        top: 0;
+        width: 64px;
+        height: 80px;
+      }
+
+      #s2-words {
+        left: 1010px;
+        top: 250px;
+        width: 820px;
+      }
+      #s2-words .line {
+        display: block;
+        font-size: 190px;
+        line-height: 0.98;
+        letter-spacing: -0.02em;
+      }
+      #s2-words .line.big {
+        font-size: 230px;
+        line-height: 1.05;
+      }
+
+      /* ---------- leaderboard (scene 3) ---------- */
+      #lb {
+        left: 640px;
+        top: 66px;
+        width: 1200px;
+        height: 960px;
+      }
+      .lbhead {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1200px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        font-size: 24px;
+        color: var(--grey);
+        letter-spacing: 0.08em;
+        border-bottom: 2px solid var(--line);
+      }
+      .lbhead b {
+        color: var(--white);
+        font-weight: 600;
+      }
+      .row {
+        position: absolute;
+        left: 0;
+        width: 1200px;
+        height: 76px;
+        border-radius: 16px;
+        background: var(--panel);
+        border: 2px solid #1c1c1c;
+      }
+      .row .rglow {
+        position: absolute;
+        inset: -2px;
+        border-radius: 16px;
+        border: 2px solid var(--accent);
+        background: linear-gradient(90deg, rgba(123, 98, 246, 0.55) 0%, rgba(123, 98, 246, 0.12) 70%);
+        box-shadow: 0 0 36px rgba(123, 98, 246, 0.55);
+        opacity: 0;
+      }
+      .row .content {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 28px;
+        gap: 22px;
+      }
+      .row .rank {
+        width: 44px;
+        font-size: 26px;
+        color: var(--grey);
+      }
+      .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #2e2e2e;
+        border: 2px solid #4a4a4a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: var(--white);
+        flex: none;
+      }
+      .row .handle {
+        font-size: 30px;
+        color: var(--white);
+        width: 440px;
+      }
+      .pick {
+        font-size: 26px;
+        color: var(--white);
+        border: 2px solid #3a3a3a;
+        border-radius: 999px;
+        padding: 6px 20px;
+        width: 100px;
+        text-align: center;
+      }
+      .row .ret {
+        position: absolute;
+        right: 30px;
+        top: 0;
+        height: 76px;
+        width: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-size: 36px;
+        color: var(--white);
+      }
+      .row .cut {
+        position: absolute;
+        left: 16px;
+        top: 36px;
+        width: 1168px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--white);
+        transform-origin: 0 50%;
+      }
+      #median {
+        left: -30px;
+        top: 0;
+        width: 1260px;
+        height: 4px;
+      }
+      #median .bar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1260px;
+        height: 4px;
+        background: var(--white);
+        box-shadow: 0 0 18px rgba(255, 255, 255, 0.6);
+      }
+      #median .tag {
+        position: absolute;
+        left: -120px;
+        top: -22px;
+        height: 48px;
+        padding: 0 18px;
+        border-radius: 999px;
+        background: var(--white);
+        color: var(--black);
+        font-size: 22px;
+        letter-spacing: 0.12em;
+        display: flex;
+        align-items: center;
+      }
+      .part {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 14px;
+        height: 14px;
+        margin: -7px 0 0 -7px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 14px rgba(123, 98, 246, 0.95);
+        opacity: 0;
+      }
+      #s3-head {
+        left: 80px;
+        top: 610px;
+        width: 540px;
+        height: 420px;
+      }
+      #s3-head .hl {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 540px;
+      }
+      #s3-head .t {
+        display: block;
+        font-size: 108px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      #s3-head .t.serif {
+        font-size: 150px;
+        line-height: 1.16;
+      }
+
+      /* ---------- scene 4 ---------- */
+      #s4 .accentbg {
+        position: absolute;
+        inset: 0;
+        background: var(--accent);
+      }
+      #s4-mark {
+        left: 1240px;
+        top: 360px;
+        width: 900px;
+        height: 904px;
+        opacity: 0.1;
+      }
+      #s4-word {
+        left: 0;
+        top: 250px;
+        width: 1920px;
+        text-align: center;
+        font-size: 300px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      #s4-word .ch {
+        display: inline-block;
+      }
+      .tag4 {
+        left: 0;
+        top: 640px;
+        width: 1920px;
+        text-align: center;
+        font-size: 140px;
+        line-height: 1;
+      }
+      .tag4 .word {
+        margin: 0 22px;
+      }
+
+      /* ---------- scene 5 ---------- */
+      .robot {
+        position: absolute;
+        top: 110px;
+        width: 170px;
+        height: 250px;
+      }
+      .robot svg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 170px;
+        height: 190px;
+        display: block;
+      }
+      .robot .rname {
+        position: absolute;
+        left: -20px;
+        top: 198px;
+        width: 210px;
+        text-align: center;
+        font-size: 22px;
+        color: var(--grey);
+      }
+      #grid5 {
+        left: 300px;
+        top: 440px;
+        width: 480px;
+        height: 480px;
+      }
+      #grid5 .cell {
+        border-radius: 14px;
+      }
+      #grid5 .cell .glow {
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 0 3px var(--white);
+      }
+      #grid5 .cell .lbl {
+        font-size: 26px;
+      }
+      .chip {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 84px;
+        height: 44px;
+        border-radius: 999px;
+        background: var(--white);
+        color: var(--black);
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+      }
+      #s5-head {
+        left: 1060px;
+        top: 120px;
+        width: 800px;
+        height: 130px;
+      }
+      #s5-head .hl {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 800px;
+        font-size: 100px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+      #lb5 {
+        left: 1060px;
+        top: 300px;
+        width: 780px;
+        height: 600px;
+      }
+      #lb5 .row {
+        width: 780px;
+        height: 88px;
+      }
+      #lb5 .row .handle {
+        width: 230px;
+      }
+      #lb5 .row .ret {
+        height: 88px;
+        font-size: 32px;
+        width: 150px;
+        color: var(--accent);
+      }
+      .agenttag {
+        font-size: 18px;
+        letter-spacing: 0.12em;
+        color: var(--black);
+        background: var(--white);
+        border-radius: 8px;
+        padding: 6px 10px;
+        flex: none;
+      }
+      .avatar.bot {
+        background: #141414;
+        border-color: var(--white);
+        border-radius: 14px;
+      }
+
+      /* ---------- scene 6 (light) ---------- */
+      #s6 .creambg {
+        position: absolute;
+        inset: 0;
+        background: var(--cream);
+      }
+      #s6-head {
+        left: 0;
+        top: 70px;
+        width: 1920px;
+        text-align: center;
+        font-size: 120px;
+        line-height: 1.05;
+        color: var(--black);
+        letter-spacing: -0.02em;
+      }
+      #s6-head .word {
+        margin: 0 18px;
+      }
+      .card {
+        position: absolute;
+        top: 250px;
+        width: 400px;
+        height: 560px;
+      }
+      .card img {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 400px;
+        height: 560px;
+        display: block;
+      }
+      .card .ring {
+        position: absolute;
+        inset: -12px;
+        border-radius: 44px;
+        border: 8px solid var(--accent);
+        box-shadow: 0 0 50px rgba(123, 98, 246, 0.7);
+        opacity: 0;
+      }
+      .card .shadow {
+        position: absolute;
+        left: 30px;
+        top: 40px;
+        width: 340px;
+        height: 520px;
+        border-radius: 40px;
+        box-shadow: 0 40px 80px rgba(0, 0, 0, 0.28);
+      }
+      .line6 {
+        position: absolute;
+        top: 860px;
+        width: 400px;
+        height: 64px;
+        border-radius: 999px;
+        border: 3px solid var(--black);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: var(--black);
+      }
+      .line6 .fill {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        inset: -3px;
+        border-radius: 999px;
+        background: var(--accent);
+        opacity: 0;
+      }
+      .line6 span {
+        position: relative;
+      }
+      #cursor6 {
+        left: 0;
+        top: 0;
+        width: 64px;
+        height: 80px;
+      }
+
+      /* ---------- scene 7 ---------- */
+      #pool {
+        left: 160px;
+        top: 70px;
+        width: 760px;
+        height: 250px;
+        transform-origin: 0 60%;
+      }
+      #pool .label {
+        font-size: 26px;
+        letter-spacing: 0.14em;
+        color: var(--grey);
+      }
+      #pool .num {
+        font-size: 170px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+      #top10label {
+        left: 160px;
+        top: 336px;
+        font-size: 22px;
+        letter-spacing: 0.14em;
+        color: var(--grey);
+      }
+      #s7-head {
+        left: 900px;
+        top: 130px;
+        width: 860px;
+        text-align: right;
+        font-size: 96px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+      #s7-head .word {
+        margin-left: 22px;
+      }
+      .row7 {
+        width: 780px;
+        height: 100px;
+      }
+      .row7 .content {
+        gap: 20px;
+      }
+      .row7 .rank {
+        width: 52px;
+        font-size: 34px;
+        color: var(--white);
+      }
+      .row7 .handle {
+        width: 270px;
+      }
+      .row7 .acc7 {
+        font-size: 22px;
+        color: var(--grey);
+      }
+      .row7 .ret {
+        height: 100px;
+        font-size: 44px;
+        color: var(--accent);
+        width: 240px;
+      }
+      .coin {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 4px solid #b5a6ff;
+        box-shadow: 0 0 16px rgba(123, 98, 246, 0.9);
+        opacity: 0;
+      }
+      .block {
+        position: absolute;
+        top: 0;
+        width: 322px;
+        height: 1080px;
+        background: var(--accent);
+      }
+
+      /* ---------- scene 8 ---------- */
+      #lockup {
+        left: 0;
+        top: 330px;
+        width: 1920px;
+        height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 48px;
+      }
+      #lock-mark {
+        width: 200px;
+        height: 201px;
+        display: block;
+      }
+      #lock-word {
+        font-size: 210px;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        white-space: nowrap;
+      }
+      #lock-word .ch {
+        display: inline-block;
+      }
+      #pill {
+        left: 710px;
+        top: 630px;
+        width: 500px;
+        height: 96px;
+        border-radius: 999px;
+        background: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 50px;
+        color: var(--white);
+      }
+      #chain {
+        left: 760px;
+        top: 770px;
+        width: 400px;
+        height: 60px;
+        border-radius: 999px;
+        border: 2px solid #5a5a5a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        color: #d0d0d0;
+      }
+    </style>
+
+    <div
+      id="kick"
+      data-composition-id="video"
+      data-start="0"
+      data-duration="60"
+      data-width="1920"
+      data-height="1080"
+    >
+      <audio
+        id="music"
+        src="assets/music.mp3"
+        data-start="0"
+        data-duration="60"
+        data-track-index="9"
+        data-timeline-role="music"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":1},{"t":55,"v":1},{"t":60,"v":0}]}]}'
+      ></audio>
+
+      <!-- ============ SCENE 1: Yes or no? / Boring. / Call the score. ============ -->
+      <div id="s1" class="scene">
+        <div id="cam1" class="cam">
+          <div id="s1-glow" class="glowbg" style="left: 260px; top: -160px"></div>
+          <div id="s1-yes" class="abs">Yes or no?</div>
+          <div id="s1-boring" class="abs serif">Boring.</div>
+          <div id="s1-call" class="abs">
+            <span id="s1-l1" class="l1">Call the</span>
+            <span id="s1-l2" class="l2 serif acc">score.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SCENES 2 + 3: grid, then the median gate ============ -->
+      <div id="s23" class="scene">
+        <div id="cam23" class="cam">
+          <div id="s2-glow" class="glowbg" style="left: -200px; top: -120px"></div>
+
+          <div id="gridblock" class="abs">
+            <div id="gridhead">
+              <div class="team">
+                <img src="assets/clubs/chelsea.webp" alt="" />
+                <span>Chelsea</span>
+              </div>
+              <span class="vs">PICK THE SCORE</span>
+              <div class="team">
+                <span>Arsenal</span>
+                <img src="assets/clubs/arsenal.webp" alt="" />
+              </div>
+            </div>
+            <div id="grid" class="grid"></div>
+          </div>
+          <div id="ripple" class="abs"></div>
+
+          <div id="s2-words" class="abs">
+            <span id="w-close" class="line">Close</span>
+            <span id="w-still" class="line">still</span>
+            <span id="w-pays" class="line big serif acc" data-layout-allow-overlap>pays.</span>
+          </div>
+
+          <div id="lb" class="abs">
+            <div class="lbhead">
+              <span>FULL TIME&nbsp;&nbsp;<b>CHE 2-1 ARS</b></span>
+              <span>POOL&nbsp;&nbsp;<b>$12,480</b></span>
+            </div>
+            <div id="lbrows"></div>
+            <div id="median" class="abs">
+              <div class="bar"></div>
+              <div class="tag">MEDIAN</div>
+            </div>
+            <div id="parts3"></div>
+          </div>
+
+          <div id="s3-head" class="abs">
+            <div id="h3a" class="hl">
+              <span id="h3-below" class="t">Below</span>
+              <span id="h3-median" class="t">median?</span>
+              <span id="h3-out" class="t serif">Out.</span>
+            </div>
+            <div id="h3b" class="hl">
+              <span id="h3-winners" class="t serif acc">Winners</span>
+              <span id="h3-split" class="t">split it.</span>
+            </div>
+          </div>
+
+          <svg id="cursor" class="abs" viewBox="0 0 64 80" aria-hidden="true">
+            <path
+              d="M6 4 L6 64 L22 50 L33 74 L44 69 L33 46 L54 46 Z"
+              fill="#ffffff"
+              stroke="#000000"
+              stroke-width="4"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 4: KICKOFF on accent ============ -->
+      <div id="s4" class="scene">
+        <div class="accentbg"></div>
+        <div id="cam4" class="cam">
+          <img id="s4-mark" class="abs" src="assets/logo.svg" alt="" />
+          <div id="s4-word" class="abs">
+            <span class="ch">K</span><span class="ch">I</span><span class="ch">C</span><span class="ch">K</span
+            ><span class="ch">O</span><span class="ch">F</span><span class="ch">F</span>
+          </div>
+          <div id="tag4a" class="abs tag4">
+            <span id="t4-beat" class="word">Beat</span><span id="t4-the" class="word">the</span
+            ><span id="t4-pack" class="word serif">pack.</span>
+          </div>
+          <div id="tag4b" class="abs tag4">
+            <span id="t4-keep" class="word">Keep</span><span id="t4-the2" class="word">the</span
+            ><span id="t4-stack" class="word serif">stack.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 5: agents ============ -->
+      <div id="s5" class="scene">
+        <div id="cam5" class="cam">
+          <div id="s5-glow" class="glowbg" style="left: -300px; top: 80px"></div>
+
+          <div id="robot0" class="robot" style="left: 140px">
+            <svg viewBox="0 0 170 190" aria-hidden="true">
+              <line x1="85" y1="50" x2="85" y2="26" stroke="#fff" stroke-width="5" />
+              <circle id="dot0" cx="85" cy="16" r="10" fill="#fff" />
+              <rect x="6" y="88" width="16" height="36" rx="6" fill="#fff" />
+              <rect x="148" y="88" width="16" height="36" rx="6" fill="#fff" />
+              <rect x="22" y="50" width="126" height="116" rx="30" fill="#141414" stroke="#fff" stroke-width="5" />
+              <circle cx="60" cy="100" r="13" fill="#fff" />
+              <circle cx="110" cy="100" r="13" fill="#fff" />
+              <path d="M62 134 Q85 148 108 134" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+            </svg>
+            <div class="rname">@xg.agent</div>
+          </div>
+          <div id="robot1" class="robot" style="left: 350px">
+            <svg viewBox="0 0 170 190" aria-hidden="true">
+              <line x1="85" y1="50" x2="85" y2="26" stroke="#fff" stroke-width="5" />
+              <circle id="dot1" cx="85" cy="16" r="10" fill="#fff" />
+              <rect x="22" y="50" width="126" height="116" rx="12" fill="#141414" stroke="#fff" stroke-width="5" />
+              <rect x="44" y="84" width="82" height="30" rx="15" fill="#fff" />
+              <rect x="56" y="92" width="16" height="14" rx="4" fill="#141414" />
+              <rect x="98" y="92" width="16" height="14" rx="4" fill="#141414" />
+              <line x1="64" y1="138" x2="106" y2="138" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+            </svg>
+            <div class="rname">@tiki_ai</div>
+          </div>
+          <div id="robot2" class="robot" style="left: 560px">
+            <svg viewBox="0 0 170 190" aria-hidden="true">
+              <line x1="85" y1="50" x2="85" y2="26" stroke="#fff" stroke-width="5" />
+              <circle id="dot2" cx="85" cy="16" r="10" fill="#fff" />
+              <circle cx="85" cy="108" r="62" fill="#141414" stroke="#fff" stroke-width="5" />
+              <rect x="56" y="88" width="20" height="20" rx="3" fill="#fff" />
+              <rect x="94" y="88" width="20" height="20" rx="3" fill="#fff" />
+              <rect x="64" y="130" width="42" height="10" rx="5" fill="#fff" />
+            </svg>
+            <div class="rname">@nine_bot</div>
+          </div>
+          <div id="robot3" class="robot" style="left: 770px">
+            <svg viewBox="0 0 170 190" aria-hidden="true">
+              <line x1="85" y1="50" x2="85" y2="26" stroke="#fff" stroke-width="5" />
+              <circle id="dot3" cx="85" cy="16" r="10" fill="#fff" />
+              <path d="M30 60 L140 60 L150 160 L20 160 Z" fill="#141414" stroke="#fff" stroke-width="5" stroke-linejoin="round" />
+              <circle cx="85" cy="100" r="22" fill="none" stroke="#fff" stroke-width="5" />
+              <circle cx="85" cy="100" r="9" fill="#fff" />
+              <path d="M58 138 L70 132 L85 138 L100 132 L112 138" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round" />
+            </svg>
+            <div class="rname">@oddsbot</div>
+          </div>
+
+          <div id="grid5" class="grid"></div>
+          <div id="chip0" class="chip">1-0</div>
+          <div id="chip1" class="chip">2-1</div>
+          <div id="chip2" class="chip">3-1</div>
+          <div id="chip3" class="chip">0-0</div>
+
+          <div id="s5-head" class="abs">
+            <div id="h5a" class="hl">
+              <span id="h5-agents" class="word serif acc">Agents</span>
+              <span id="h5-play" class="word">play too.</span>
+            </div>
+            <div id="h5b" class="hl">
+              <span id="h5-same" class="word">Same</span>
+              <span id="h5-markets" class="word serif acc">markets.</span>
+            </div>
+          </div>
+
+          <div id="lb5" class="abs"></div>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 6: player perps (light) ============ -->
+      <div id="s6" class="scene">
+        <div class="creambg"></div>
+        <div id="cam6" class="cam">
+          <div id="s6-head" class="abs">
+            <span id="h6-pick" class="word">Pick</span><span id="h6-your" class="word">your</span
+            ><span id="h6-player" class="word serif acc">player.</span>
+          </div>
+          <div id="card0" class="card" style="left: 360px">
+            <div class="shadow"></div>
+            <div class="ring"></div>
+            <img src="assets/cards/palmer.webp" alt="Cole Palmer" />
+          </div>
+          <div id="card1" class="card" style="left: 760px">
+            <div class="shadow"></div>
+            <div id="ring1" class="ring"></div>
+            <img src="assets/cards/haaland.webp" alt="Erling Haaland" />
+          </div>
+          <div id="card2" class="card" style="left: 1160px">
+            <div class="shadow"></div>
+            <div class="ring"></div>
+            <img src="assets/cards/gyokeres.webp" alt="Viktor Gyokeres" />
+          </div>
+          <div id="line0" class="line6" style="left: 360px"><span>LINE 7.5 PTS</span></div>
+          <div id="line1" class="line6" style="left: 760px">
+            <span id="line1base">LINE 9.5 PTS</span>
+            <div id="fill1" class="fill"><span>LINE 9.5 PTS</span></div>
+          </div>
+          <div id="line2" class="line6" style="left: 1160px"><span>LINE 8.0 PTS</span></div>
+          <svg id="cursor6" class="abs" viewBox="0 0 64 80" aria-hidden="true">
+            <path
+              d="M6 4 L6 64 L22 50 L33 74 L44 69 L33 46 L54 46 Z"
+              fill="#ffffff"
+              stroke="#000000"
+              stroke-width="4"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 7: the accumulator ============ -->
+      <div id="s7" class="scene">
+        <div id="cam7" class="cam">
+          <div id="s7-glow" class="glowbg" style="left: -380px; top: -700px"></div>
+          <div id="pool" class="abs">
+            <div class="label">ACCUMULATOR POOL</div>
+            <div id="poolnum" class="num">$0</div>
+          </div>
+          <div id="top10label" class="abs">TOP 10&nbsp;&nbsp;&middot;&nbsp;&nbsp;SEASON 25/26</div>
+          <div id="s7-head" class="abs">
+            <span id="h7-top" class="word">Top 10</span><span id="h7-split" class="word serif acc">split it.</span>
+          </div>
+          <div id="rows7"></div>
+          <div id="coins7"></div>
+        </div>
+      </div>
+
+      <!-- ============ SCENE 8: lockup ============ -->
+      <div id="s8" class="scene">
+        <div id="cam8" class="cam">
+          <div id="s8-glow" class="glowbg" style="left: 260px; top: -260px"></div>
+          <div id="lockup" class="abs">
+            <img id="lock-mark" src="assets/logo.svg" alt="Kickoff" />
+            <div id="lock-word">
+              <span class="ch">k</span><span class="ch">i</span><span class="ch">c</span><span class="ch">k</span
+              ><span class="ch">o</span><span class="ch">f</span><span class="ch">f</span>
+            </div>
+          </div>
+          <div id="pill" class="abs">kickoff.cash</div>
+          <div id="chain" class="abs">On Robinhood Chain</div>
+        </div>
+      </div>
+
+      <!-- transition overlays -->
+      <div id="wipe5" class="abs" style="left: -2500px; top: -100px; width: 2400px; height: 1280px; background: #7b62f6"></div>
+      <div id="blocks">
+        <div class="block" style="left: 0px"></div>
+        <div class="block" style="left: 320px"></div>
+        <div class="block" style="left: 640px"></div>
+        <div class="block" style="left: 960px"></div>
+        <div class="block" style="left: 1280px"></div>
+        <div class="block" style="left: 1600px"></div>
+      </div>
+    </div>
+
+    <script>
+      // ------------------------------------------------------------------
+      // Beat grid from `npx hyperframes beats` (beats/assets/music.mp3.json).
+      // BEATS: every detected beat (strength >= 0.55). STRONG: the hits
+      // (strength >= 0.84) that carry scene changes and big entrances.
+      // ------------------------------------------------------------------
+      const BEATS = [
+        0.52, 1.01, 1.52, 2.01, 2.51, 3.04, 3.52, 4.0, 4.52, 5.03, 5.5, 6.0, 6.5, 7.0, 8.02, 8.52,
+        9.02, 9.52, 10.01, 10.51, 11.03, 11.52, 12.01, 12.5, 13.03, 13.5, 14.0, 14.5, 15.04, 15.51,
+        16.02, 16.52, 17.02, 17.5, 18.01, 18.51, 19.01, 19.52, 20.0, 20.5, 21.04, 21.5, 22.0, 22.51,
+        23.01, 24.02, 24.52, 25.02, 25.53, 26.03, 26.51, 27.0, 27.52, 28.0, 28.5, 29.0, 29.5, 30.01,
+        30.51, 31.02, 31.51, 32.02, 32.52, 33.02, 33.53, 34.01, 34.51, 35.0, 35.52, 36.04, 36.5, 37.0,
+        37.5, 38.01, 38.51, 39.01, 39.51, 40.02, 40.52, 41.02, 41.53, 42.01, 42.5, 43.03, 43.51, 44.0,
+        44.5, 45.0, 45.5, 46.01, 46.51, 47.02, 47.51, 48.02, 48.52, 49.02, 49.52, 50.03, 50.52, 51.0,
+        51.51, 52.0, 52.5, 53.0, 53.5, 54.02, 54.51, 55.01, 55.51,
+      ];
+      const STRONG = [0.52, 1.52, 3.04, 5.03, 11.03, 13.03, 15.04, 17.02, 21.04, 26.03, 31.02, 36.04, 43.03, 47.02, 50.03, 54.02];
+      const beat = (t) => BEATS.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));
+      // start time so a tween of duration d lands exactly on the beat nearest t
+      const land = (t, d) => beat(t) - d;
+
+      const tl = gsap.timeline({ paused: true });
+
+      // beat punch: quick scale kick on a beat, settles back
+      const punch = (sel, t, amt = 1.06) => {
+        tl.to(sel, { scale: amt, duration: 0.06, ease: "power2.out" }, beat(t));
+        tl.to(sel, { scale: 1, duration: 0.3, ease: "power2.out" }, beat(t) + 0.06);
+      };
+      // counter: rolls a number into an element, seek-safe (value is a pure function of the proxy)
+      const counter = (el, from, to, t, d, fmt, ease = "power2.out") => {
+        const o = { v: from };
+        tl.fromTo(
+          o,
+          { v: from },
+          {
+            v: to,
+            duration: d,
+            ease,
+            onUpdate: () => {
+              el.textContent = fmt(o.v);
+            },
+          },
+          t,
+        );
+      };
+      const pct = (v) => (Math.round(v) > 0 ? "+" : "") + Math.round(v) + "%";
+      const usd = (v) => "$" + Math.round(v).toLocaleString("en-US");
+
+      // ------------------------------------------------------------------
+      // Build the scoreline grids (fixed loops, same DOM every load)
+      // ------------------------------------------------------------------
+      const buildGrid = (host, cell, gap) => {
+        const cells = {};
+        for (let r = 0; r < 5; r++) {
+          for (let c = 0; c < 5; c++) {
+            const d = document.createElement("div");
+            d.className = "cell";
+            d.style.left = c * (cell + gap) + "px";
+            d.style.top = r * (cell + gap) + "px";
+            d.style.width = cell + "px";
+            d.style.height = cell + "px";
+            d.innerHTML = '<div class="glow"></div><span class="lbl">' + r + "-" + c + "</span>";
+            host.appendChild(d);
+            cells[r + "-" + c] = d;
+          }
+        }
+        return cells;
+      };
+      const G2 = buildGrid(document.getElementById("grid"), 112, 12);
+      const G5 = buildGrid(document.getElementById("grid5"), 88, 10);
+
+      // ------------------------------------------------------------------
+      // Leaderboard rows (fake handles and numbers)
+      // ------------------------------------------------------------------
+      const LB = [
+        ["TK", "@tekkerstan", "2-1", 300],
+        ["XG", "@xg_merchant", "2-1", 240],
+        ["NM", "@nutmeg.eth", "1-1", 160],
+        ["LB", "@lowblock", "2-0", 120],
+        ["PP", "@panenka_pete", "3-1", 80],
+        ["PB", "@parkthebus", "1-0", -100],
+        ["TB", "@top_bins", "0-0", -100],
+        ["SK", "@sweeperkeeper", "3-3", -100],
+        ["HB", "@hoofball", "0-2", -100],
+        ["BJ", "@bottlejob", "4-0", -100],
+      ];
+      const lbrows = document.getElementById("lbrows");
+      const R3 = LB.map((d, i) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.top = 80 + i * 84 + "px";
+        row.innerHTML =
+          '<div class="rglow"></div><div class="content"><span class="rank">' +
+          (i + 1) +
+          '</span><div class="avatar">' +
+          d[0] +
+          '</div><span class="handle">' +
+          d[1] +
+          '</span><span class="pick">' +
+          d[2] +
+          '</span></div><div class="ret">0%</div>' +
+          (i >= 5 ? '<div class="cut"></div>' : "");
+        lbrows.appendChild(row);
+        return row;
+      });
+
+      // particles: loser rows -> winner rows. Hand-fixed [startX, startY, endX, endY, delay] in board px.
+      const P3 = [
+        [860, 528, 1060, 110, 0.0], [860, 622, 1097, 202, 0.04], [860, 716, 1134, 126, 0.08],
+        [860, 780, 1081, 278, 0.12], [860, 874, 1118, 118, 0.16], [920, 548, 1065, 210, 0.2],
+        [920, 612, 1102, 362, 0.24], [920, 706, 1139, 118, 0.28], [920, 800, 1086, 294, 0.32],
+        [920, 864, 1123, 194, 0.36], [980, 538, 1070, 454, 0.4], [980, 632, 1107, 126, 0.44],
+        [980, 696, 1144, 194, 0.48], [980, 790, 1091, 370, 0.52], [980, 884, 1128, 294, 0.56],
+        [1040, 528, 1075, 110, 0.6], [1040, 622, 1112, 202, 0.64], [1040, 716, 1149, 294, 0.68],
+        [1040, 780, 1096, 110, 0.72], [1040, 874, 1133, 370, 0.76], [1100, 548, 1080, 462, 0.8],
+        [1100, 612, 1117, 110, 0.84], [1100, 706, 1064, 202, 0.88], [1100, 800, 1101, 294, 0.92],
+        [1100, 864, 1138, 362, 0.96], [1150, 538, 1085, 118, 1.0], [1150, 632, 1122, 210, 1.04],
+        [1150, 696, 1069, 278, 1.08], [1150, 790, 1106, 118, 1.12], [1150, 884, 1143, 462, 1.16],
+      ];
+      const parts3 = document.getElementById("parts3");
+      const PE3 = P3.map(() => {
+        const p = document.createElement("div");
+        p.className = "part";
+        parts3.appendChild(p);
+        return p;
+      });
+
+      // scene 5 mini board: humans in 1, 3, 5; agents drop into 0, 2, 4
+      const LB5 = [
+        ["bot", "@xg.agent", "2-1", "+300%"],
+        ["TK", "@tekkerstan", "2-1", "+300%"],
+        ["bot", "@tiki_ai", "3-1", "+150%"],
+        ["NM", "@nutmeg.eth", "1-1", "+150%"],
+        ["bot", "@nine_bot", "1-0", "+80%"],
+        ["LB", "@lowblock", "2-0", "+80%"],
+      ];
+      const lb5 = document.getElementById("lb5");
+      const R5 = LB5.map((d, i) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.top = i * 100 + "px";
+        const isBot = d[0] === "bot";
+        row.innerHTML =
+          '<div class="content"><span class="rank">' +
+          (i + 1) +
+          "</span>" +
+          (isBot
+            ? '<div class="avatar bot"><svg width="30" height="30" viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="18" rx="5" fill="none" stroke="#fff" stroke-width="3"/><circle cx="11" cy="16" r="2.6" fill="#fff"/><circle cx="19" cy="16" r="2.6" fill="#fff"/><line x1="15" y1="7" x2="15" y2="2" stroke="#fff" stroke-width="3"/></svg></div>'
+            : '<div class="avatar">' + d[0] + "</div>") +
+          '<span class="handle">' +
+          d[1] +
+          "</span>" +
+          (isBot ? '<span class="agenttag">AGENT</span>' : "") +
+          '</div><div class="ret">' +
+          d[3] +
+          "</div>";
+        const pick = document.createElement("span");
+        pick.className = "pick";
+        pick.textContent = d[2];
+        pick.style.position = "absolute";
+        pick.style.left = "545px";
+        pick.style.top = "19px";
+        row.appendChild(pick);
+        lb5.appendChild(row);
+        return row;
+      });
+
+      // scene 7: top 10 board
+      const T10 = [
+        ["TK", "@tekkerstan", "96%", 10615],
+        ["XG", "@xg.agent", "94%", 7720],
+        ["NM", "@nutmeg.eth", "91%", 6273],
+        ["PP", "@panenka_pete", "89%", 5308],
+        ["LB", "@lowblock", "88%", 4343],
+        ["TI", "@tiki_ai", "86%", 3860],
+        ["RB", "@rabona_rae", "85%", 3378],
+        ["FN", "@false_nine", "83%", 2895],
+        ["GG", "@gegenpress", "82%", 2171],
+        ["CL", "@cleansheet", "80%", 1687],
+      ];
+      const rows7 = document.getElementById("rows7");
+      const R7 = T10.map((d, i) => {
+        const row = document.createElement("div");
+        row.className = "row row7";
+        row.style.left = (i < 5 ? 160 : 980) + "px";
+        row.style.top = 380 + (i % 5) * 114 + "px";
+        row.innerHTML =
+          '<div class="rglow"></div><div class="content"><span class="rank">' +
+          String(i + 1).padStart(2, "0") +
+          '</span><div class="avatar">' +
+          d[0] +
+          '</div><span class="handle">' +
+          d[1] +
+          '</span><span class="acc7">' +
+          d[2] +
+          ' acc</span></div><div class="ret">$0</div>';
+        rows7.appendChild(row);
+        return row;
+      });
+      // coins: pool -> payout. Hand-fixed [startX, startY, endX, endY, rank].
+      const C7 = [
+        [240, 250, 830, 424, 0], [323, 264, 816, 436, 0], [406, 250, 802, 424, 0], [489, 264, 788, 436, 0],
+        [572, 250, 774, 424, 0], [655, 264, 830, 538, 1], [258, 250, 816, 550, 1], [341, 264, 802, 538, 1],
+        [424, 250, 788, 550, 1], [507, 264, 830, 652, 2], [590, 250, 816, 664, 2], [673, 264, 802, 652, 2],
+        [276, 250, 830, 766, 3], [359, 264, 816, 778, 3], [442, 250, 802, 766, 3], [525, 264, 830, 880, 4],
+        [608, 250, 816, 892, 4], [691, 264, 1650, 424, 5], [294, 250, 1636, 436, 5], [377, 264, 1650, 538, 6],
+        [460, 250, 1636, 550, 6], [543, 264, 1650, 652, 7], [626, 250, 1650, 766, 8], [709, 264, 1650, 880, 9],
+      ];
+      const coins7 = document.getElementById("coins7");
+      const CE7 = C7.map(() => {
+        const c = document.createElement("div");
+        c.className = "coin";
+        coins7.appendChild(c);
+        return c;
+      });
+
+      // cursor tip offset: the arrow tip sits at (6, 4) inside its 64x80 box
+      const TIP = { x: 6, y: 4 };
+
+      // ==================================================================
+      // SCENE 1 (0 - 5): Yes or no? / Boring. / Call the score.
+      // ==================================================================
+      tl.fromTo("#cam1", { scale: 1, x: 0 }, { scale: 1.06, x: -24, duration: 5.1, ease: "none" }, 0);
+      tl.fromTo("#s1-glow", { scale: 0.8, opacity: 0.5 }, { scale: 1.15, opacity: 1, duration: 5.1, ease: "sine.inOut" }, 0);
+
+      // side snap from the left, lands on 0.52
+      tl.fromTo("#s1-yes", { x: -1500, skewX: 30, opacity: 1 }, { x: 0, skewX: 0, duration: 0.3, ease: "expo.out" }, land(0.52, 0.12));
+      // drops from the top, lands on 1.52 and knocks "Yes or no?" down and away
+      tl.fromTo("#s1-boring", { y: -900, rotation: -8 }, { y: 0, rotation: -3, duration: 0.34, ease: "power3.in" }, land(1.52, 0.34));
+      tl.to("#s1-boring", { scaleY: 0.86, scaleX: 1.08, transformOrigin: "50% 100%", duration: 0.06, ease: "power2.out" }, 1.52);
+      tl.to("#s1-boring", { scaleY: 1, scaleX: 1, duration: 0.4, ease: "elastic.out(1, 0.45)" }, 1.58);
+      tl.to("#s1-yes", { y: -260, rotation: -14, x: -120, opacity: 0, duration: 0.45, ease: "power3.out" }, 1.52);
+      punch("#s1-boring", 2.01, 1.05);
+      punch("#s1-boring", 2.51, 1.05);
+      // "Call the score." slams in on 3.04; "Boring." is blasted off by the hit
+      tl.to("#s1-boring", { scale: 0.4, y: 380, rotation: 24, opacity: 0, duration: 0.3, ease: "power3.in" }, land(3.04, 0.22));
+      tl.fromTo("#s1-l1", { scale: 3.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.22, ease: "power4.in" }, land(3.04, 0.22));
+      tl.fromTo(
+        "#s1-l2",
+        { scale: 4.2, rotation: -8, opacity: 0 },
+        { scale: 1, rotation: -2, opacity: 1, duration: 0.22, ease: "power4.in" },
+        land(3.04, 0.2),
+      );
+      tl.fromTo("#cam1", { y: 0 }, { y: 14, duration: 0.05, ease: "none", yoyo: true, repeat: 3, immediateRender: false }, 3.04);
+      punch("#s1-l2", 3.52, 1.07);
+      punch("#s1-l2", 4.0, 1.07);
+      punch("#s1-l1", 4.52, 1.05);
+
+      // TRANSITION 1 -> 2: vertical push, the grid rises in and lands on 5.03
+      tl.set("#s23", { opacity: 1 }, 4.6);
+      tl.to("#s1", { y: -1080, duration: 0.43, ease: "power3.in" }, 4.6);
+      tl.fromTo("#s23", { y: 1080 }, { y: 0, duration: 0.43, ease: "power3.out" }, land(5.03, 0.43));
+      tl.set("#s1", { opacity: 0 }, 5.05);
+
+      // ==================================================================
+      // SCENE 2 (5 - 11): the grid, a tap on 2-1, "Close still pays."
+      // ==================================================================
+      tl.fromTo("#cam23", { scale: 1, x: 0 }, { scale: 1.04, x: -20, duration: 16, ease: "none" }, 4.6);
+      tl.fromTo("#s2-glow", { scale: 0.85, opacity: 0.4 }, { scale: 1.1, opacity: 0.9, duration: 6, ease: "sine.inOut" }, 5.03);
+      tl.fromTo("#gridhead", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 5.03);
+      // cells rise in by diagonal
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          tl.fromTo(
+            G2[r + "-" + c],
+            { y: 70, opacity: 0, scale: 0.9 },
+            { y: 0, opacity: 1, scale: 1, duration: 0.42, ease: "back.out(1.6)" },
+            5.1 + (r + c) * 0.06,
+          );
+        }
+      }
+      // cursor glides in and taps 2-1 on the 7.0 beat
+      const TAP = { x: 376, y: 572 };
+      tl.fromTo(
+        "#cursor",
+        { x: 1500, y: 1120, opacity: 1 },
+        { x: TAP.x - TIP.x, y: TAP.y - TIP.y, duration: 0.95, ease: "power3.inOut" },
+        land(7.0, 1.05),
+      );
+      tl.to("#cursor", { scale: 0.8, transformOrigin: "10% 5%", duration: 0.08, ease: "power2.in" }, 6.92);
+      tl.to("#cursor", { scale: 1, duration: 0.25, ease: "back.out(3)" }, 7.0);
+      // glow spreads from the tapped cell and fades with distance
+      const tapR = 2,
+        tapC = 1;
+      const GLOW = [1, 0.62, 0.34, 0.17, 0.08, 0.04, 0.02, 0.01, 0.0];
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          const d = Math.abs(r - tapR) + Math.abs(c - tapC);
+          const g = G2[r + "-" + c].querySelector(".glow");
+          tl.fromTo(g, { opacity: 0 }, { opacity: GLOW[d], duration: 0.4, ease: "power2.out" }, 7.0 + d * 0.08);
+        }
+      }
+      tl.fromTo(G2["2-1"], { scale: 1 }, { scale: 1.14, duration: 0.08, ease: "power2.out", immediateRender: false }, 7.0);
+      tl.to(G2["2-1"], { scale: 1, duration: 0.5, ease: "elastic.out(1, 0.4)" }, 7.08);
+      tl.fromTo("#ripple", { scale: 0.6, opacity: 0.9 }, { scale: 6, opacity: 0, duration: 1.0, ease: "power2.out" }, 7.0);
+      tl.to("#cursor", { x: 520, y: 820, opacity: 0, duration: 0.6, ease: "power2.in" }, 7.6);
+
+      // "Close" rises, "still" snaps in from the right, "pays." scale-slams
+      tl.fromTo("#w-close", { y: 160, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "circ.out" }, land(8.02, 0.12));
+      tl.fromTo("#w-still", { x: 700, skewX: -24, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, land(8.52, 0.1));
+      tl.fromTo(
+        "#w-pays",
+        { scale: 3.6, rotation: 6, opacity: 0 },
+        { scale: 1, rotation: 0, opacity: 1, duration: 0.2, ease: "power4.in" },
+        land(9.02, 0.2),
+      );
+      tl.fromTo("#cam23", { y: 0 }, { y: 12, duration: 0.05, ease: "none", yoyo: true, repeat: 3, immediateRender: false }, 9.02);
+      punch("#w-pays", 9.52, 1.06);
+      punch("#w-pays", 10.01, 1.06);
+      punch(G2["2-1"], 10.01, 1.08);
+      punch("#w-pays", 10.51, 1.06);
+
+      // ==================================================================
+      // SCENE 3 (11 - 21): THE MEDIAN GATE
+      // ==================================================================
+      // push: grid slides left and shrinks, words pushed off, leaderboard pushes in from the right
+      tl.to("#gridblock", { x: -120, y: -86, scale: 0.6, duration: 0.5, ease: "power3.inOut" }, land(11.03, 0.45));
+      tl.to("#s2-words", { x: -1300, opacity: 0, duration: 0.45, ease: "power3.in" }, land(11.03, 0.45));
+      tl.fromTo("#lb", { x: 1400 }, { x: 0, duration: 0.45, ease: "power3.out" }, land(11.03, 0.45));
+      R3.forEach((row, i) => {
+        tl.fromTo(row, { x: 260, opacity: 0 }, { x: 0, opacity: 1, duration: 0.38, ease: "power3.out" }, 11.03 + i * 0.05);
+      });
+      tl.set("#median", { y: -60, opacity: 0 }, 0);
+
+      // "Below" rises, "median?" drops
+      tl.fromTo("#h3-below", { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "circ.out" }, land(12.01, 0.12));
+      tl.fromTo("#h3-median", { y: -200, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.8)" }, land(12.5, 0.2));
+      tl.set("#h3-out", { opacity: 0 }, 0);
+      tl.set("#h3b", { opacity: 0 }, 0);
+
+      // MEDIAN line sweeps down through the list, lands between rank 5 and rank 6 on 13.03
+      const MEDIAN_Y = 496;
+      tl.set("#median", { opacity: 1 }, 12.35);
+      tl.fromTo("#median", { y: 40 }, { y: 880, duration: 0.38, ease: "power2.in", immediateRender: false }, 12.35);
+      tl.to("#median", { y: MEDIAN_Y, duration: 0.3, ease: "power3.out" }, 12.73);
+      tl.fromTo("#median .bar", { scaleY: 1 }, { scaleY: 3, duration: 0.06, yoyo: true, repeat: 1, ease: "none", immediateRender: false }, 13.03);
+      punch("#median .tag", 13.03, 1.2);
+
+      // rows below the line dim
+      for (let i = 5; i < 10; i++) {
+        tl.to(R3[i].querySelector(".content"), { opacity: 0.5, duration: 0.3, ease: "power1.out" }, 13.5 + (i - 5) * 0.1);
+        tl.to(R3[i], { opacity: 0.85, duration: 0.3 }, 13.5 + (i - 5) * 0.1);
+      }
+      punch("#median .tag", 14.0, 1.12);
+      punch("#median .tag", 14.5, 1.12);
+
+      // wipe cut on 15.04: counters drop to -100%, "Out." slams
+      for (let i = 5; i < 10; i++) {
+        const t0 = land(15.04, 0.2) + (i - 5) * 0.06;
+        tl.fromTo(R3[i].querySelector(".cut"), { scaleX: 0 }, { scaleX: 1, duration: 0.2, ease: "power3.in" }, t0);
+        tl.to(R3[i].querySelector(".content"), { x: 18, opacity: 0.45, duration: 0.25, ease: "power2.out" }, t0 + 0.2);
+        tl.set(R3[i].querySelector(".ret"), { color: "#9a9a9a" }, t0 + 0.2);
+        counter(R3[i].querySelector(".ret"), 0, -100, t0 + 0.2, 0.45, pct, "power3.out");
+      }
+      tl.fromTo("#h3-out", { scale: 3.2, rotation: -6, opacity: 0 }, { scale: 1, rotation: -2, opacity: 1, duration: 0.2, ease: "power4.in" }, land(15.04, 0.2));
+      tl.fromTo("#cam23", { x: -8 }, { x: 8, duration: 0.05, ease: "none", yoyo: true, repeat: 3, immediateRender: false }, 15.04);
+      punch("#h3-out", 15.51, 1.06);
+
+      // headline swap
+      tl.to("#h3a", { y: -140, opacity: 0, duration: 0.3, ease: "power3.in" }, 16.3);
+      tl.set("#h3b", { opacity: 1 }, 16.6);
+
+      // particles stream from the cut rows up to the winners (starts on 17.02)
+      PE3.forEach((p, k) => {
+        const [sx, sy, ex, ey, d] = P3[k];
+        const t0 = 17.02 + d * 0.9;
+        tl.fromTo(p, { x: sx, y: sy, opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.1, ease: "none" }, t0);
+        tl.fromTo(p, { x: sx }, { x: ex - 170, duration: 0.3, ease: "sine.out", immediateRender: false }, t0);
+        tl.to(p, { x: ex, duration: 0.3, ease: "sine.in" }, t0 + 0.3);
+        tl.fromTo(p, { y: sy }, { y: ey, duration: 0.6, ease: "power2.inOut", immediateRender: false }, t0);
+        tl.to(p, { scale: 0.2, opacity: 0, duration: 0.12, ease: "power2.in" }, t0 + 0.58);
+      });
+
+      // "Winners" rises with a turn, "split it." side-snaps
+      tl.fromTo("#h3-winners", { y: 140, rotation: 8, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 0.4, ease: "circ.out" }, land(17.5, 0.12));
+      tl.fromTo("#h3-split", { x: -700, skewX: 26, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, land(18.01, 0.1));
+
+      // winners: counters roll up and rows glow, strongest at rank 1
+      const WGLOW = [1, 0.8, 0.62, 0.48, 0.36];
+      for (let i = 0; i < 5; i++) {
+        const t0 = 17.7 + i * 0.12;
+        counter(R3[i].querySelector(".ret"), 0, LB[i][3], t0, 1.3, pct);
+        tl.fromTo(R3[i].querySelector(".rglow"), { opacity: 0 }, { opacity: WGLOW[i], duration: 0.5, ease: "power2.out" }, t0 + 0.2);
+      }
+      [18.51, 19.01, 19.52, 20.0].forEach((t) => punch(R3[0], t, 1.03));
+      punch("#h3-winners", 19.01, 1.06);
+      punch("#h3-winners", 20.0, 1.06);
+
+      // TRANSITION 3 -> 4: zoom through the rank-1 row into the accent
+      tl.set("#s23", { transformOrigin: "1240px 186px" }, 0);
+      tl.to("#s23", { scale: 14, duration: 0.5, ease: "power3.in" }, land(21.04, 0.5));
+      tl.set("#s4", { opacity: 1 }, 20.9);
+      tl.fromTo("#s4", { scale: 0.2 }, { scale: 1, duration: 0.14, ease: "power2.out", immediateRender: false }, 20.9);
+      tl.set("#s23", { opacity: 0 }, 21.05);
+
+      // ==================================================================
+      // SCENE 4 (21 - 26): KICKOFF + "Beat the pack. Keep the stack."
+      // ==================================================================
+      tl.fromTo("#cam4", { scale: 1.02, x: 20 }, { scale: 1.07, x: -20, duration: 5.2, ease: "none" }, 20.9);
+      tl.fromTo("#s4-mark", { rotation: -8, y: 0 }, { rotation: 6, y: -60, duration: 5.2, ease: "none" }, 20.9);
+      tl.fromTo(
+        "#s4-word .ch",
+        { scale: 2.6, y: 60, opacity: 0 },
+        { scale: 1, y: 0, opacity: 1, duration: 0.34, ease: "power4.out", stagger: 0.045 },
+        21.04,
+      );
+      punch("#s4-word", 21.5, 1.04);
+      // one word per beat, each with its own entrance
+      tl.fromTo("#t4-beat", { y: -420, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.6)" }, land(22.0, 0.2));
+      tl.fromTo("#t4-the", { x: 600, skewX: -24, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.28, ease: "expo.out" }, land(22.51, 0.1));
+      tl.fromTo("#t4-pack", { scale: 3.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power4.in" }, land(23.01, 0.2));
+      tl.to("#tag4a", { y: -120, opacity: 0, duration: 0.3, ease: "power3.in" }, 23.62);
+      tl.fromTo("#t4-keep", { y: 180, opacity: 0 }, { y: 0, opacity: 1, duration: 0.38, ease: "circ.out" }, land(24.02, 0.12));
+      tl.fromTo("#t4-the2", { x: -600, skewX: 24, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.28, ease: "expo.out" }, land(24.52, 0.1));
+      tl.fromTo(
+        "#t4-stack",
+        { scale: 0.2, rotation: -12, opacity: 0 },
+        { scale: 1, rotation: 0, opacity: 1, duration: 0.3, ease: "back.out(2.2)" },
+        land(25.02, 0.2),
+      );
+      tl.fromTo("#cam4", { y: 0 }, { y: 12, duration: 0.05, ease: "none", yoyo: true, repeat: 3, immediateRender: false }, 25.02);
+
+      // TRANSITION 4 -> 5: whip pan with blur
+      tl.set("#s5", { opacity: 1, x: 1920 }, 25.6);
+      tl.to("#s4", { x: -1920, filter: "blur(36px)", duration: 0.34, ease: "power3.in" }, 25.6);
+      tl.fromTo(
+        "#s5",
+        { x: 1920, filter: "blur(36px)" },
+        { x: 0, filter: "blur(0px)", duration: 0.36, ease: "power3.out", immediateRender: false },
+        land(26.03, 0.36),
+      );
+      tl.set("#s4", { opacity: 0 }, 26.03);
+
+      // ==================================================================
+      // SCENE 5 (26 - 36): AGENTS
+      // ==================================================================
+      tl.fromTo("#cam5", { scale: 1, x: 0 }, { scale: 1.04, x: -18, duration: 10, ease: "none" }, 26.03);
+      tl.fromTo("#s5-glow", { scale: 0.8, opacity: 0.4 }, { scale: 1.15, opacity: 0.9, duration: 10, ease: "sine.inOut" }, 26.03);
+      for (let i = 0; i < 4; i++) tl.set("#dot" + i, { opacity: 0.25 }, 0);
+      // robots pop in one per beat, each differently
+      tl.fromTo("#robot0", { scale: 0, rotation: -20 }, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2.2)" }, land(26.51, 0.15));
+      tl.fromTo("#robot1", { y: -520 }, { y: 0, duration: 0.3, ease: "power3.in" }, land(27.0, 0.3));
+      tl.to("#robot1", { scaleY: 0.86, scaleX: 1.1, transformOrigin: "50% 100%", duration: 0.06 }, 27.0);
+      tl.to("#robot1", { scaleY: 1, scaleX: 1, duration: 0.4, ease: "elastic.out(1, 0.45)" }, 27.06);
+      tl.fromTo("#robot2", { y: 360, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "circ.out" }, land(27.52, 0.12));
+      tl.fromTo("#robot3", { x: -900, skewX: 24 }, { x: 0, skewX: 0, duration: 0.3, ease: "expo.out" }, land(28.0, 0.1));
+      // grid rises in below the robots
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 5; c++) {
+          tl.fromTo(
+            G5[r + "-" + c],
+            { y: 50, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.36, ease: "power3.out" },
+            28.3 + (r + c) * 0.04,
+          );
+        }
+      }
+      // "Agents" slams, "play too." rises
+      tl.fromTo("#h5-agents", { scale: 3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power4.in" }, land(29.0, 0.2));
+      tl.fromTo("#h5-play", { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 0.38, ease: "circ.out" }, land(29.5, 0.12));
+
+      // each robot thinks (blinking dot), then drops its score chip into the grid on a beat
+      const CELL5 = (r, c) => ({ x: 300 + c * 98 + 44, y: 440 + r * 98 + 44 });
+      const DROPS = [
+        { cell: "1-0", at: 30.01 },
+        { cell: "2-1", at: 30.51 },
+        { cell: "3-1", at: 31.02 },
+        { cell: "0-0", at: 31.51 },
+      ];
+      DROPS.forEach((d, i) => {
+        const [r, c] = d.cell.split("-").map(Number);
+        const end = CELL5(r, c);
+        const rx = 140 + i * 210 + 85;
+        const thinkStart = 28.6 + i * 0.25;
+        const blinks = Math.max(0, Math.floor((d.at - 0.55 - thinkStart) / 0.25) - 1);
+        tl.fromTo(
+          "#dot" + i,
+          { opacity: 0.25 },
+          { opacity: 1, duration: 0.125, ease: "none", yoyo: true, repeat: blinks * 2 + 1, immediateRender: false },
+          thinkStart,
+        );
+        tl.to("#dot" + i, { opacity: 1, duration: 0.05 }, d.at - 0.5);
+        const chip = "#chip" + i;
+        const fall = 0.45;
+        tl.fromTo(chip, { x: rx - 42, y: 300, opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.12, ease: "power2.out" }, d.at - fall - 0.12);
+        tl.fromTo(chip, { x: rx - 42 }, { x: end.x - 42, duration: fall, ease: "sine.inOut", immediateRender: false }, d.at - fall);
+        tl.fromTo(chip, { y: 300 }, { y: end.y - 22, duration: fall, ease: "power2.in", immediateRender: false }, d.at - fall);
+        tl.to(chip, { scaleY: 0.8, scaleX: 1.15, duration: 0.06, ease: "power2.out" }, d.at);
+        tl.to(chip, { scaleY: 1, scaleX: 1, duration: 0.35, ease: "elastic.out(1, 0.45)" }, d.at + 0.06);
+        tl.fromTo(G5[d.cell].querySelector(".glow"), { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, d.at);
+        tl.to(G5[d.cell].querySelector(".lbl"), { opacity: 0, duration: 0.05 }, d.at - 0.06);
+        tl.to("#dot" + i, { opacity: 0.25, duration: 0.2 }, d.at + 0.1);
+      });
+
+      // leaderboard: humans slide in, then agents drop into the gaps with the AGENT tag
+      [1, 3, 5].forEach((i, k) => {
+        tl.fromTo(R5[i], { x: 300, opacity: 0 }, { x: 0, opacity: 1, duration: 0.36, ease: "power3.out" }, 32.02 + k * 0.08);
+      });
+      [0, 2, 4].forEach((i, k) => {
+        const t = [33.02, 33.53, 34.01][k];
+        tl.fromTo(R5[i], { scale: 1.25, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.24, ease: "power3.out" }, land(t, 0.16));
+        tl.fromTo(R5[i].querySelector(".agenttag"), { scale: 2.4, rotation: -10 }, { scale: 1, rotation: 0, duration: 0.22, ease: "back.out(2)" }, t);
+      });
+      // headline swap: "Same markets."
+      tl.to("#h5a", { y: -130, opacity: 0, duration: 0.28, ease: "power3.in" }, 34.3);
+      tl.fromTo("#h5-same", { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }, land(34.51, 0.2));
+      tl.fromTo("#h5-markets", { x: 500, skewX: -22, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.28, ease: "expo.out" }, land(35.0, 0.1));
+      punch("#h5-markets", 35.52, 1.06);
+
+      // TRANSITION 5 -> 6: accent wipe, reveals the light scene
+      tl.set("#wipe5", { opacity: 0 }, 0);
+      tl.set("#wipe5", { opacity: 1 }, 35.55);
+      tl.set("#wipe5", { opacity: 0 }, 36.12);
+      tl.fromTo("#wipe5", { x: 0, skewX: -12 }, { x: 2420, duration: 0.3, ease: "power3.in" }, 35.55);
+      tl.set("#s6", { opacity: 1 }, 35.85);
+      tl.set("#s5", { opacity: 0 }, 35.86);
+      tl.to("#wipe5", { x: 5000, duration: 0.24, ease: "power3.out" }, 35.85);
+
+      // ==================================================================
+      // SCENE 6 (36 - 43): Player Perps, light scene
+      // ==================================================================
+      tl.fromTo("#cam6", { scale: 1.03, y: 10 }, { scale: 1, y: -10, duration: 7.2, ease: "none" }, 35.85);
+      tl.set("#cursor6", { opacity: 0 }, 0);
+      // cards deal in one per beat with a side snap
+      tl.fromTo("#card0", { x: -1200, rotation: -30 }, { x: 0, rotation: -6, duration: 0.3, ease: "expo.out" }, land(36.5, 0.1));
+      tl.fromTo("#card1", { x: 1300, y: -120, rotation: 26 }, { x: 0, y: 0, rotation: 0, duration: 0.3, ease: "expo.out" }, land(37.5, 0.1));
+      tl.fromTo(
+        "#card2",
+        { x: 900, rotationY: -80, rotation: 10, transformPerspective: 1400 },
+        { x: 0, rotationY: 0, rotation: 6, duration: 0.34, ease: "expo.out" },
+        land(38.51, 0.1),
+      );
+      // "Pick" drops, "your" snaps, "player." slams
+      tl.fromTo("#h6-pick", { y: -300, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }, land(39.01, 0.2));
+      tl.fromTo("#h6-your", { x: -500, skewX: 22, opacity: 0 }, { x: 0, skewX: 0, opacity: 1, duration: 0.28, ease: "expo.out" }, land(39.51, 0.1));
+      tl.fromTo("#h6-player", { scale: 3.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power4.in" }, land(40.02, 0.2));
+      // line chips rise under each card
+      [0, 1, 2].forEach((i) => {
+        tl.fromTo("#line" + i, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power3.out" }, 40.4 + i * 0.08);
+      });
+      // cursor taps Haaland
+      tl.fromTo("#cursor6", { x: 1500, y: 1100, opacity: 1 }, { x: 960 - TIP.x, y: 560 - TIP.y, duration: 0.8, ease: "power3.inOut" }, land(41.53, 0.85));
+      tl.to("#cursor6", { scale: 0.8, transformOrigin: "10% 5%", duration: 0.08 }, 41.45);
+      tl.to("#cursor6", { scale: 1, duration: 0.25, ease: "back.out(3)" }, 41.53);
+      tl.to("#card1", { y: -24, scale: 1.05, duration: 0.3, ease: "back.out(2)" }, 41.53);
+      tl.fromTo("#ring1", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 41.53);
+      tl.to(["#card0", "#card2", "#line0", "#line2"], { opacity: 0.45, duration: 0.3 }, 41.6);
+      tl.fromTo("#fill1", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 41.6);
+      tl.to("#line1base", { opacity: 0, duration: 0.1 }, 41.6);
+      tl.to("#cursor6", { x: 1150, y: 900, opacity: 0, duration: 0.5, ease: "power2.in" }, 42.05);
+      punch("#h6-player", 42.01, 1.05);
+
+      // TRANSITION 6 -> 7: vertical push
+      tl.set("#s7", { opacity: 1 }, 42.6);
+      tl.to("#s6", { y: -1080, duration: 0.43, ease: "power3.in" }, 42.6);
+      tl.fromTo("#s7", { y: 1080 }, { y: 0, duration: 0.43, ease: "power3.out" }, land(43.03, 0.43));
+      tl.set("#s6", { opacity: 0 }, 43.05);
+
+      // ==================================================================
+      // SCENE 7 (43 - 54): THE ACCUMULATOR
+      // ==================================================================
+      tl.fromTo("#cam7", { scale: 1, x: 10 }, { scale: 1.035, x: -14, duration: 11, ease: "none" }, 42.6);
+      tl.fromTo("#s7-glow", { scale: 0.8, opacity: 0.5 }, { scale: 1.1, opacity: 1, duration: 11, ease: "sine.inOut" }, 43.03);
+      tl.fromTo("#pool", { scale: 0.25, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)" }, 43.03);
+      counter(document.getElementById("poolnum"), 0, 48250, 43.1, 1.4, usd);
+      tl.fromTo("#top10label", { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 43.51);
+      // one row per beat, rank 1 to 10
+      R7.forEach((row, i) => {
+        const t = land(44.0 + i * 0.5, 0.12);
+        if (i % 2 === 0) {
+          tl.fromTo(row, { x: -200, opacity: 0 }, { x: 0, opacity: 1, duration: 0.36, ease: "expo.out" }, t);
+        } else {
+          tl.fromTo(row, { y: 70, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "circ.out" }, t);
+        }
+      });
+      punch("#pool", 47.02, 1.04);
+      // coins flow from the pool into the rows
+      CE7.forEach((c, k) => {
+        const [sx, sy, ex, ey, rank] = C7[k];
+        const t0 = 49.02 + k * 0.045;
+        tl.fromTo(c, { x: sx, y: sy, opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.1 }, t0);
+        tl.fromTo(c, { x: sx }, { x: ex, duration: 0.7, ease: "power1.inOut", immediateRender: false }, t0);
+        tl.fromTo(c, { y: sy }, { y: sy - 90, duration: 0.25, ease: "power2.out", immediateRender: false }, t0);
+        tl.to(c, { y: ey, duration: 0.45, ease: "power2.in" }, t0 + 0.25);
+        tl.to(c, { scale: 0.2, opacity: 0, duration: 0.1 }, t0 + 0.68);
+      });
+      // payouts count up, rank 1 takes the biggest share
+      R7.forEach((row, i) => {
+        const t0 = 49.7 + i * 0.1;
+        counter(row.querySelector(".ret"), 0, T10[i][3], t0, 1.6 - i * 0.05, usd);
+        tl.fromTo(row.querySelector(".rglow"), { opacity: 0 }, { opacity: [1, 0.7, 0.55, 0.45, 0.38, 0.3, 0.26, 0.22, 0.18, 0.15][i], duration: 0.4 }, t0);
+      });
+      counter(document.getElementById("poolnum"), 48250, 0, 49.02, 1.6, usd, "power1.in");
+      // "Top 10" drops, "split it." slams
+      tl.fromTo("#h7-top", { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }, land(51.0, 0.2));
+      tl.fromTo("#h7-split", { scale: 3.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power4.in" }, land(51.51, 0.2));
+      [52.0, 52.5, 53.0].forEach((t) => punch(R7[0], t, 1.03));
+      punch("#h7-split", 53.0, 1.06);
+
+      // TRANSITION 7 -> 8: staggered accent blocks close, then open on the lockup
+      tl.fromTo("#blocks .block", { scaleY: 0, transformOrigin: "50% 0%" }, { scaleY: 1, duration: 0.24, ease: "power3.in", stagger: 0.035 }, 53.45);
+      tl.set("#s8", { opacity: 1 }, 53.88);
+      tl.set("#s7", { opacity: 0 }, 53.88);
+      tl.set("#blocks .block", { transformOrigin: "50% 100%" }, 53.88);
+      tl.to("#blocks .block", { scaleY: 0, duration: 0.24, ease: "power3.out", stagger: 0.035 }, 53.9);
+
+      // ==================================================================
+      // SCENE 8 (54 - 60): lockup
+      // ==================================================================
+      tl.fromTo("#cam8", { scale: 1 }, { scale: 1.05, duration: 6.1, ease: "none" }, 53.9);
+      tl.fromTo("#s8-glow", { scale: 0.7, opacity: 0.3 }, { scale: 1.1, opacity: 0.9, duration: 6, ease: "sine.inOut" }, 54.02);
+      tl.fromTo("#lock-mark", { scale: 3, rotation: -30, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.24, ease: "power4.in" }, land(54.02, 0.1));
+      tl.fromTo("#lock-word .ch", { y: 140, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "circ.out", stagger: 0.04 }, 54.2);
+      tl.fromTo("#pill", { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "back.out(1.6)" }, land(55.01, 0.14));
+      tl.fromTo("#chain", { y: -40, scale: 0.7, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.32, ease: "back.out(2)" }, land(55.51, 0.14));
+      punch("#pill", 56.02, 1.05);
+      tl.to("#cam8", { opacity: 0, duration: 0.9, ease: "power1.in" }, 59.05);
+
+      window.__timelines["video"] = tl;
+    </script>
+  </body>
+</html>
