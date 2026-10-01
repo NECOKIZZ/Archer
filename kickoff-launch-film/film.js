@@ -45,7 +45,13 @@ function R(el, t, tin, tout, { x, y, ax = 50, ay = 50, dur = 0.6, outDur = 0.36,
 // ───────────────────────── persistent ball (the K-mark's ball) ─────────────────────────
 const ballEl = $('ball');
 let B;
-function ball(x, y, r, color = C.green, o = 1, glow = 1) { B = { x, y, r, color, o, glow }; }
+function ball(x, y, r, color = C.green, o = 1, glow = 1) { B = { x, y, r, color, o, glow }; } // screen space
+// Every scene drifts in with a slow 4% camera push across its window, so no hold is ever frozen.
+// Scene-space anchors are mapped to screen space with scr() so carried objects still land exactly.
+const PUSH = 0.04;
+function pushS(id, t) { const w = WIN[id]; return 1 + PUSH * cl((t - w[0]) / (w[1] - w[0])); }
+function scr(id, t, x, y) { const s = pushS(id, t); return [960 + (x - 960) * s, 540 + (y - 540) * s, s]; }
+function ballIn(id, t, x, y, r, ...rest) { const [X, Y, s] = scr(id, t, x, y); ball(X, Y, r * s, ...rest); }
 function applyBall() {
   if (!B || B.o <= 0.001 || B.r <= 0.05) { ballEl.style.opacity = 0; return; }
   const s = B.r / 50;
@@ -56,7 +62,7 @@ function applyBall() {
   ballEl.style.boxShadow = `0 0 ${g}px ${g * 0.25}px ${B.color.startsWith('rgb') ? B.color.replace('rgb', 'rgba').replace(')', ',0.45)') : B.color + '73'}`;
 }
 
-// ───────────────────────── background: glow + streaks (grain and vignette are added in post) ─────────────────────────
+// ───────────────────────── background: glow + streaks (vignette is added in post) ─────────────────────────
 const glowKeys = [ // t, green, purple
   [0, 0.62, 0], [3.6, 0.5, 0], [4.2, 0.18, 0], [9.0, 0.18, 0], [10.0, 0.55, 0], [12.4, 0.5, 0], [13.2, 0.32, 0.05],
   [19.5, 0.3, 0.05], [25, 0.28, 0.08], [30.5, 0.34, 0.08], [31.2, 0.12, 0.32], [34.6, 0.3, 0.14], [37.6, 0.5, 0], [42, 0.28, 0.06],
@@ -79,9 +85,13 @@ function makeStreaks() {
   $('streaks').style.backgroundImage = `url(${c.toDataURL()})`; $('streaks').style.backgroundSize = '2000px 100%';
 }
 function background(t) {
-  const [g, p] = glowAt(t);
+  // the floor glow pulses on every beat of the 120 BPM score (harder when the drums play)
+  const drums = (t >= 13 && t < 42) || (t >= 46 && t < 56.8);
+  const beat = Math.exp(-((t % 0.5) / 0.5) * 5) * (drums ? 0.22 : 0.12);
+  const [g0, p0] = glowAt(t); const g = g0 * (1 + beat), p = p0 * (1 + beat);
   $('glowG').style.opacity = g; $('glowP').style.opacity = p;
-  $('streaks').style.backgroundPosition = `${(t * 10).toFixed(1)}px 0`;
+  // curtain streaks drift continuously, like the reference's moving light
+  $('streaks').style.backgroundPosition = `${(t * 34 + 40 * Math.sin(t * 0.7)).toFixed(1)}px 0`;
   $('streaks').style.opacity = 0.25 + 0.7 * Math.max(g, p);
 }
 
@@ -307,7 +317,7 @@ function s2(t) {
     const toPill = P(t, 6.9, 7.35, 'power3.inOut');
     const ign = P(t, 9.0, 9.35, 'back.out(2)');
     const col = ign > 0 ? mix(C.grey, C.green, cl(ign)) : mix(C.green, C.grey, P(t, 6.3, 6.9));
-    ball(L(960, 704, toPill), 540, L(10, 18, toPill) + 6 * ign, col, 1, ign);
+    ballIn('s2', t, L(960, 704, toPill), 540, L(10, 18, toPill) + 6 * ign, col, 1, ign);
   }
 }
 
@@ -327,10 +337,12 @@ function s3(t) {
   const bx = 960 + (lk.bx - lk.w / 2) * sc, by = cy - out * 40 + (lk.by - 100) * sc, br = lk.br * sc;
   if (t < 12.15) {
     const m = P(t, 9.4, 10.2, 'power3.inOut');
-    ball(L(704, bx, m), L(540, by, m), L(24, br, m), C.green, 1, 1);
+    const [ax, ay, as] = scr('s2', 9.4, 704, 540), [zx, zy, zs] = scr('s3', t, bx, by);
+    ball(L(ax, zx, m), L(ay, zy, m), L(24 * as, br * zs, m), C.green, 1, 1);
   } else if (t < 12.5) {
     const m = P(t, 12.15, 12.5, 'power3.inOut');
-    ball(L(bx, M.cell21.x, m), L(by, M.cell21.y, m), L(br, 42, m), C.green, 1, 1);
+    const [ax, ay, as] = scr('s3', t, bx, by);
+    ball(L(ax, M.cell21.x, m), L(ay, M.cell21.y, m), L(br * as, 42, m), C.green, 1, 1);
   }
 }
 
@@ -401,7 +413,10 @@ function s4(t) {
   const carry = $('carry');
   if (t >= 18.45 && t < 19.42 && M.cell21Rect && M.pickRect) {
     const u = P(t, 18.45, 19.4, 'power3.inOut');
-    const a = M.cell21Rect, b = M.pickRect;
+    const s = pushS('s4', 18.45), r0 = M.cell21Rect, [ax, ay] = scr('s4', 18.45, r0.left, r0.top);
+    const a = { left: ax, top: ay, width: r0.width * s, height: r0.height * s };
+    const sb = pushS('s5', 19.4), r1 = M.pickRect, [bx, by] = scr('s5', 19.4, r1.left, r1.top);
+    const b = { left: bx, top: by, width: r1.width * sb, height: r1.height * sb };
     carry.style.display = 'flex';
     carry.style.left = L(a.left, b.left, u) + 'px'; carry.style.top = L(a.top, b.top, u) + 'px';
     carry.style.width = L(a.width, b.width, u) + 'px'; carry.style.height = L(a.height, b.height, u) + 'px';
@@ -444,9 +459,8 @@ function s5(t) {
   R($('s5c3'), t, 23.6, 24.6, { x: 150, y: 480, ax: 0 });
   if (t >= 21.8 && t < 24.6) {
     const press = 1 - 0.08 * Math.sin(Math.PI * cl((t - 22.2) / 0.2));
-    ball(L(x0, x1, slide), ty, L(0, 36, P(t, 21.8, 22.1, 'back.out(1.6)')) * press, C.green, 1, 0.7);
+    ballIn('s5', t, L(x0, x1, slide), ty, L(0, 36, P(t, 21.8, 22.1, 'back.out(1.6)')) * press, C.green, 1, 0.7);
   }
-  M.thumbEnd = { x: x1, y: ty };
 }
 
 const goals = [[23, 1, 0], [51, 1, 1], [74, 2, 1]];
@@ -494,10 +508,9 @@ function s6(t) {
   if (t >= 24.6 && t < 31.0) {
     const v = val(mt); const ex = CX(mt), ey = CY(v);
     const col = v >= 0 ? C.green : C.purple;
-    if (t < 25.4) { const m = P(t, 24.6, 25.4, 'power3.inOut'); ball(L(M.thumbEnd.x, 170, m), L(M.thumbEnd.y, CY(val(0)), m), L(36, 12, m), C.green, 1, 1); }
-    else ball(ex, ey, 12, col, 1, 1);
+    if (t < 25.4) { const m = P(t, 24.6, 25.4, 'power3.inOut'); const [ax, ay, as] = scr('s5', 24.6, M.thumbEnd.x, M.thumbEnd.y), [zx, zy, zs] = scr('s6', t, 170, CY(val(0))); ball(L(ax, zx, m), L(ay, zy, m), L(36 * as, 12 * zs, m), C.green, 1, 1); }
+    else ballIn('s6', t, ex, ey, 12, col, 1, 1);
   }
-  M.lineEnd = { x: CX(90), y: CY(val(90)) };
 }
 
 function s7(t) {
@@ -542,8 +555,8 @@ function s7(t) {
   // ball: line end → your dot in the field → row A marker
   if (t >= 31.0 && t < 37.6) {
     const m1 = P(t, 31.0, 31.7, 'power3.inOut'), m2 = P(t, 34.6, 35.1, 'power3.inOut');
-    const x = L(L(M.lineEnd.x, field.youX, m1), 222, m2), y = L(L(M.lineEnd.y, field.youY, m1), 400, m2);
-    ball(x, y - (1 - m2) * 0, 13, C.green, 1 - P(t, 37.3, 37.6), 1);
+    const [ax, ay] = scr('s6', 31.0, M.lineEnd.x, M.lineEnd.y), [fx, fy, fs] = scr('s7', t, field.youX, field.youY), [rx, ry] = scr('s7', t, 222, 400);
+    ball(L(L(ax, fx, m1), rx, m2), L(L(ay, fy, m1), ry, m2), 13 * fs, C.green, 1 - P(t, 37.3, 37.6), 1);
   }
 }
 
@@ -590,7 +603,8 @@ function s9(t) {
   if (t >= 43.65 && t < 46.6) {
     const pop = P(t, 43.65, 44.0, 'back.out(1.8)');
     const go = P(t, 45.7, 46.3, 'power3.inOut');
-    ball(L(1080, 960, go), L(540, 640, go), L(0, 74, pop) * L(1, 1.3, go), C.green, 1 - P(t, 46.15, 46.55), 1);
+    const [ax, ay, as] = scr('s9', t, 1080, 540), [zx, zy] = scr('s10', t, 960, 640);
+    ball(L(ax, zx, go), L(ay, zy, go), L(0, 74, pop) * L(1, 1.3, go) * as, C.green, 1 - P(t, 46.15, 46.55), 1);
   }
 }
 
@@ -670,6 +684,8 @@ const scenes = [
   ['s11', 50.55, 54.7, s11], ['s12', 54.5, 57.0, s12], ['s13', 56.75, 60.01, s13],
 ];
 
+const WIN = Object.fromEntries(scenes.map(([id, a, b]) => [id, [a, b]]));
+
 function seek(t) {
   B = null;
   background(t);
@@ -678,7 +694,7 @@ function seek(t) {
     const [id, a, b, fn] = scenes[i];
     const on = t >= a && t < b;
     $(id).style.display = on ? 'block' : 'none';
-    if (on) fn(t);
+    if (on) { $(id).style.transform = `scale(${pushS(id, t)})`; fn(t); }
   }
   if (!(t >= 12.0 && t < 19.45)) $('carry').style.display = 'none';
   portal(t);
@@ -705,6 +721,8 @@ async function init() {
   const pr = $('pickBox').getBoundingClientRect(); M.pickRect = { left: pr.left, top: pr.top, width: pr.width, height: pr.height };
   const trk = $('track').getBoundingClientRect(); M.track = { left: trk.left, right: trk.right, top: trk.top, height: trk.height };
   $('s5').style.display = 'none';
+  M.thumbEnd = { x: M.track.right - 48, y: M.track.top + M.track.height / 2 }; // slider end, handed to the chart
+  M.lineEnd = { x: CX(90), y: CY(val(90)) }; // chart end, handed to the field
   $('s4').style.display = 'block';
   const cellAt = (tt) => { s4(tt); const r = cells['21'].el.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
   M.cell21 = cellAt(13.0); M.cell21Rect = cellAt(18.45);

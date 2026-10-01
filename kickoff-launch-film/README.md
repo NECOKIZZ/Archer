@@ -10,7 +10,7 @@ brief → storyboard → code-built motion → measured checks → independent c
   HTML/SVG for type and UI, plus Three.js for the football bookends.
 - `audio.py` is a procedural score and sound design (120 BPM, A minor, no samples).
 - `render.mjs` is a deterministic frame renderer (headless Chromium → ffmpeg).
-- `mix.sh` handles the mix, the two-pass loudness normalisation (−14 LUFS, −1.5 dBTP), and the grain/vignette post and mux.
+- `mix.sh` handles the mix, the two-pass loudness normalisation (−14 LUFS, −2 dBTP before AAC so the encoded file stays under −1 dBTP), and the vignette post and mux.
 - `kickoff-launch-film.mp4` is the master: 1920×1080, 60 fps, AAC 256k.
 
 ## Rebuild
