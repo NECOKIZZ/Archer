@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kickoff launch film</title>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<style>
+  :root {
+    --bg: #111210; --card: #1C1D1A; --cream: #F7F5F0; --green: #00C805; --green-deep: #008C04;
+    --purple: #7B62F6; --purple-deep: #4E3CB5; --ink: #6B6F63; --red: #FF4D6D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #000; overflow: hidden; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg);
+    color: var(--cream); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  .layer, .scene { position: absolute; inset: 0; }
+  .scene { display: none; }
+  .a { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+  .clash { font-family: 'Clash Display', sans-serif; }
+  .fraunces { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .nowrap { white-space: nowrap; }
+  .mask { overflow: hidden; padding: 0.06em 0.04em 0.12em; }
+  .mask > span { display: inline-block; will-change: transform; }
+  .cap { font-family: 'Clash Display', sans-serif; font-weight: 500; font-size: 68px; letter-spacing: -0.01em; white-space: nowrap; }
+  .h1 { font-family: 'Clash Display', sans-serif; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; line-height: 1; }
+  .sub { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 36px; color: rgba(247,245,240,0.72); white-space: nowrap; letter-spacing: -0.005em; }
+  .label { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 20px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+  .g { color: var(--green); }
+  .p { color: var(--purple); }
+
+  #glowG, #glowP { position: absolute; inset: 0; }
+  #glowG { background: radial-gradient(ellipse 62% 58% at 50% 112%, rgba(0,200,5,0.85) 0%, rgba(0,140,4,0.38) 32%, rgba(0,140,4,0.08) 58%, transparent 74%); }
+  #glowP { background: radial-gradient(ellipse 62% 58% at 50% 112%, rgba(123,98,246,0.8) 0%, rgba(78,60,181,0.36) 32%, rgba(78,60,181,0.08) 58%, transparent 74%); opacity: 0; }
+  #streaks { position: absolute; inset: -40px; opacity: 0.5; }
+  #gl { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; mix-blend-mode: screen; display: none; }
+  #ball { position: absolute; left: 0; top: 0; width: 100px; height: 100px; border-radius: 50%; background: var(--green); opacity: 0; will-change: transform; }
+
+  .panel { background: linear-gradient(180deg, rgba(28,29,26,0.96), rgba(22,23,20,0.96)); border: 1px solid rgba(247,245,240,0.09);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 40px 120px rgba(0,0,0,0.55); border-radius: 28px; }
+  .pill { display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; padding: 8px 18px; font-family: 'JetBrains Mono', monospace;
+    font-size: 18px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+
+  /* scene 4 grid */
+  #gridWrap { position: absolute; left: 820px; top: 200px; width: 900px; height: 700px; transform-style: preserve-3d; }
+  .cell { position: absolute; width: 156px; height: 112px; border-radius: 18px; background: rgba(28,29,26,0.95);
+    border: 1px solid rgba(247,245,240,0.08); display: flex; align-items: center; justify-content: center;
+    font-family: 'Clash Display', sans-serif; font-weight: 500; font-size: 46px; color: rgba(247,245,240,0.82); }
+  .cell .tag { position: absolute; top: 8px; right: 10px; font-family: 'JetBrains Mono', monospace; font-size: 15px; letter-spacing: 0.1em; color: var(--cream); }
+
+  /* scene 5 card */
+  #card { position: absolute; left: 1060px; top: 70px; width: 660px; height: 940px; padding: 46px 48px; }
+  .row { display: flex; align-items: center; justify-content: space-between; }
+  .chip { width: 120px; height: 64px; border-radius: 16px; border: 1px solid rgba(247,245,240,0.12); display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 22px; color: rgba(247,245,240,0.8); }
+  #track { position: absolute; left: 48px; right: 48px; bottom: 46px; height: 96px; border-radius: 999px; background: rgba(247,245,240,0.06);
+    border: 1px solid rgba(247,245,240,0.1); overflow: hidden; }
+  #trackFill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, rgba(0,200,5,0.15), rgba(0,200,5,0.55)); border-radius: 999px; }
+  .trackTxt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Clash Display', sans-serif; font-weight: 500; font-size: 32px; }
+
+  /* scene 10 ladder */
+  .lrow { position: absolute; left: 0; width: 430px; height: 28px; display: flex; align-items: center; gap: 16px; font-family: 'JetBrains Mono', monospace; font-size: 17px; color: rgba(247,245,240,0.5); }
+  .lrow .bar { height: 10px; border-radius: 5px; background: rgba(247,245,240,0.12); }
+
+  /* scene 11 editor */
+  .code { font-family: 'JetBrains Mono', monospace; font-size: 34px; line-height: 64px; white-space: pre; }
+
+  .fix { position: absolute; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="bgLayer">
+    <div id="glowG"></div><div id="glowP"></div>
+    <div id="streaks"></div>
+  </div>
+  <canvas id="gl" width="1920" height="1080"></canvas>
+
+  <!-- 1 · hook -->
+  <div class="scene" id="s1">
+    <div class="a cap" id="s1cap">Football isn't yes or no.</div>
+  </div>
+
+  <!-- 2 · problem -->
+  <div class="scene" id="s2">
+    <div class="a mask cap" id="s2capA"><span>Two very different reads.</span></div>
+    <div class="a mask cap" id="s2capB"><span>A yes/no market pays them the same.</span></div>
+    <div class="a label" id="s2labL">Your read</div>
+    <div class="a label" id="s2labR">Their read</div>
+    <div class="a h1" id="s2L" style="font-size:300px">2–1</div>
+    <div class="a h1" id="s2R" style="font-size:300px">4–0</div>
+    <div class="a" id="s2pill" style="width:600px;height:136px;border-radius:68px;background:#1C1D1A;border:1px solid rgba(247,245,240,0.12);display:flex;align-items:center;justify-content:center;gap:0">
+      <span class="h1" style="font-size:62px;color:#8d9086;margin-left:40px">ARS WIN</span>
+    </div>
+    <div class="a mask" id="s2sub"><span class="fraunces" style="font-size:72px;color:rgba(247,245,240,0.62)">Your edge, thrown away.</span></div>
+  </div>
+
+  <!-- 3 · brand -->
+  <div class="scene" id="s3">
+    <div class="a" id="lockup">
+      <svg id="mark" width="199" height="200" viewBox="0 0 500 502" style="position:absolute;left:0;top:0;overflow:visible">
+        <path id="markK" d="M150 0L500 502H327.5L150 251.5V500H0V0H150Z" fill="#F7F5F0"/>
+      </svg>
+      <div class="h1" id="word" style="position:absolute;top:-6px;font-size:200px;letter-spacing:-0.035em"></div>
+    </div>
+    <div class="a mask h1" id="s3h" style="font-size:124px"><span>Proximity <span class="fraunces" style="font-weight:300;letter-spacing:-0.01em">markets.</span></span></div>
+    <div class="a mask sub" id="s3sub" style="font-size:42px"><span>Paid for how close you land, not just yes or no.</span></div>
+  </div>
+  <div class="layer" id="portalRing" style="display:none;pointer-events:none"></div>
+
+  <!-- 4 · grid -->
+  <div class="scene" id="s4">
+    <div class="a mask h1" id="s4c1" style="font-size:96px"><span>Pick a scoreline.</span></div>
+    <div class="a mask h1" id="s4c2" style="font-size:96px"><span>Close <span class="fraunces g">still</span> pays.</span></div>
+    <div class="a mask sub" id="s4s1"><span>Call 2–1 and it ends 2–0?</span></div>
+    <div class="a mask sub" id="s4s2"><span>You still get paid.</span></div>
+    <div class="a label" id="s4lab">ARS v CHE · pick the final score</div>
+    <div id="gridPersp" style="position:absolute;inset:0;perspective:1700px;perspective-origin:1270px 540px">
+      <div id="gridWrap"></div>
+    </div>
+    <div class="a label" id="s4leg" style="color:rgba(247,245,240,0.55)">The glow is your payout, fading with distance</div>
+  </div>
+  <div class="a" id="carry" style="display:none;background:#00C805;color:#111210;border-radius:18px;align-items:center;justify-content:center;font-family:'Clash Display';font-weight:600;letter-spacing:-0.02em"></div>
+
+  <!-- 5 · market card -->
+  <div class="scene" id="s5">
+    <div class="a mask h1" id="s5c1" style="font-size:100px"><span>Stake USDC</span></div>
+    <div class="a mask h1" id="s5c2" style="font-size:100px"><span>before <span class="fraunces g">kickoff.</span></span></div>
+    <div class="a mask sub" id="s5s1"><span>Change your pick any time until the whistle.</span></div>
+    <div class="a mask h1" id="s5c3" style="font-size:100px"><span>Then it <span class="fraunces p">locks.</span></span></div>
+    <div id="card" class="panel a">
+      <div class="row rg" style="height:44px">
+        <span class="pill" style="background:rgba(0,200,5,0.12);color:#00C805">Score market</span>
+        <span class="pill" id="status" style="border:1px solid rgba(247,245,240,0.16);color:rgba(247,245,240,0.8);min-width:250px;justify-content:center">● Open</span>
+      </div>
+      <div class="row rg" style="margin-top:44px">
+        <span class="h1" style="font-size:84px">ARS</span><span class="fraunces" style="font-size:44px;color:var(--ink)">v</span><span class="h1" style="font-size:84px">CHE</span>
+      </div>
+      <div class="rg label" style="margin-top:16px;text-align:center;font-size:17px">Gameweek 7 · Sat 15:00 · locks at kickoff</div>
+      <div class="rg label" style="margin-top:44px;font-size:17px">Your pick</div>
+      <div id="pickBox" style="margin-top:14px;height:180px;border-radius:22px;background:#00C805;color:#111210;display:flex;align-items:center;justify-content:center"><span class="h1" style="font-size:128px">2–1</span></div>
+      <div class="rg label" style="margin-top:40px;font-size:17px">Stake</div>
+      <div class="row rg" style="margin-top:10px;align-items:baseline;justify-content:flex-start;gap:16px">
+        <span class="h1" id="amt" style="font-size:88px">0.00</span><span class="mono" style="font-size:28px;color:var(--ink)">USDC</span>
+      </div>
+      <div class="row rg" style="margin-top:20px">
+        <div class="chip">10</div><div class="chip" id="chip25">25</div><div class="chip">50</div><div class="chip">MAX</div>
+      </div>
+      <div class="row rg mono" style="margin-top:30px;font-size:20px;color:rgba(247,245,240,0.5)">
+        <span>Pool 1,240.00</span><span>86 entries</span>
+      </div>
+      <div id="track" class="rg"><div id="trackFill"></div>
+        <div class="trackTxt" id="tt1" style="color:rgba(247,245,240,0.55)">Slide to stake&nbsp;&nbsp;→</div>
+        <div class="trackTxt" id="tt2" style="color:#F7F5F0;opacity:0">Staked&nbsp;&nbsp;<span class="g">✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 · live -->
+  <div class="scene" id="s6">
+    <div class="a mask h1" id="s6c1" style="font-size:72px"><span>Your position rides the match.</span></div>
+    <div class="a mask h1" id="s6c2" style="font-size:72px"><span>Full time. <span class="g">You called it.</span></span></div>
+    <div class="a" id="score" style="display:flex;align-items:center;gap:26px">
+      <span class="pill" id="livePill" style="background:rgba(0,200,5,0.12);color:#00C805">● Live</span>
+      <span class="mono" id="minute" style="font-size:34px;color:#00C805;min-width:90px;text-align:right">0'</span>
+      <span class="h1" id="scoreTxt" style="font-size:64px">ARS 0–0 CHE</span>
+    </div>
+    <svg class="a" id="chart" width="1920" height="1080" style="overflow:visible">
+      <defs>
+        <linearGradient id="lineGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1080">
+          <stop offset="0" stop-color="#00C805"/><stop id="gs1" offset="0.6" stop-color="#00C805"/><stop id="gs2" offset="0.6" stop-color="#7B62F6"/><stop offset="1" stop-color="#7B62F6"/>
+        </linearGradient>
+        <linearGradient id="fillGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1080">
+          <stop offset="0.25" stop-color="#00C805" stop-opacity="0.32"/><stop id="fs1" offset="0.6" stop-color="#00C805" stop-opacity="0.02"/><stop id="fs2" offset="0.6" stop-color="#7B62F6" stop-opacity="0.02"/><stop offset="0.85" stop-color="#7B62F6" stop-opacity="0.3"/>
+        </linearGradient>
+      </defs>
+      <g id="chartGrid"></g>
+      <path id="area" fill="url(#fillGrad)"/>
+      <path id="line" fill="none" stroke="url(#lineGrad)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g id="goals"></g>
+    </svg>
+    <div class="a label" id="s6l1">Live PnL · mark-to-model</div>
+    <div class="a label" id="s6l2" style="color:rgba(247,245,240,0.7)">Rank <span id="rank">31</span> / 86</div>
+  </div>
+
+  <!-- 7 · field + split -->
+  <div class="scene" id="s7">
+    <div class="a mask cap" id="s7c1"><span>Every call gets a distance from the result.</span></div>
+    <div class="a mask cap" id="s7c2"><span>The closer half gets <span class="g">paid.</span></span></div>
+    <div class="a mask sub" id="s7s1"><span>One trader, one vote. Heads, not dollars.</span></div>
+    <svg class="a" id="field" width="1920" height="1080" style="overflow:visible"></svg>
+    <div class="a mask cap" id="s7c3"><span>Exact calls take the <span class="g">biggest share.</span></span></div>
+    <div class="a label" id="s7hd">Worked example · 5 traders · 10 USDC each · ends 2–1</div>
+    <div id="rows" class="layer"></div>
+    <div class="a label" id="s7fn" style="font-size:16px;color:rgba(107,111,99,0.9)">From the worked example in Kickoff's docs. Illustrative.</div>
+  </div>
+
+  <!-- 8 · economics type -->
+  <div class="scene" id="s8">
+    <div class="a mask h1" id="s8a" style="font-size:240px"><span>No house.</span></div>
+    <div class="a mask sub" id="s8as" style="font-size:42px"><span>Your counterparty is the rest of the pool.</span></div>
+    <div class="a h1 g" id="s8pct" style="font-size:400px;letter-spacing:-0.05em">10%</div>
+    <div class="a mask h1" id="s8b1" style="font-size:76px"><span>of losing stakes.</span></div>
+    <div class="a mask h1" id="s8b2" style="font-size:76px;color:rgba(247,245,240,0.55)"><span>That's the whole fee.</span></div>
+    <div class="a mask h1" id="s8b3" style="font-size:76px;color:rgba(247,245,240,0.55)"><span>Winners never pay it.</span></div>
+    <div class="a" id="s8chips" style="display:flex;gap:18px">
+      <span class="pill" style="border:1px solid rgba(247,245,240,0.18);color:rgba(247,245,240,0.75);font-size:22px;padding:14px 26px">5% runs Kickoff</span>
+      <span class="pill" style="border:1px solid rgba(0,200,5,0.6);background:rgba(0,200,5,0.1);color:#00C805;font-size:22px;padding:14px 26px">5% Season Accumulator</span>
+    </div>
+  </div>
+
+  <!-- 9 · settlement -->
+  <div class="scene" id="s9">
+    <div class="a panel" id="srcA" style="width:470px;height:170px;border-radius:24px;padding:30px 36px">
+      <div class="label" style="font-size:17px">Source A · independent feed</div>
+      <div class="h1" style="font-size:54px;margin-top:22px"><span class="mono" style="font-size:24px;color:var(--ink);letter-spacing:0.1em;vertical-align:middle;margin-right:18px">FT</span>ARS 2–1 CHE</div>
+    </div>
+    <div class="a panel" id="srcB" style="width:470px;height:170px;border-radius:24px;padding:30px 36px">
+      <div class="label" style="font-size:17px">Source B · independent feed</div>
+      <div class="h1" style="font-size:54px;margin-top:22px"><span class="mono" style="font-size:24px;color:var(--ink);letter-spacing:0.1em;vertical-align:middle;margin-right:18px">FT</span>ARS 2–1 CHE</div>
+    </div>
+    <svg class="a" id="s9svg" width="1920" height="1080" style="overflow:visible">
+      <path id="pA" fill="none" stroke="rgba(247,245,240,0.35)" stroke-width="3" stroke-dasharray="6 10"/>
+      <path id="pB" fill="none" stroke="rgba(247,245,240,0.35)" stroke-width="3" stroke-dasharray="6 10"/>
+      <circle id="dA" r="9" fill="#00C805"/><circle id="dB" r="9" fill="#00C805"/>
+      <circle id="node" cx="1080" cy="540" r="74" fill="none" stroke="rgba(247,245,240,0.25)" stroke-width="3"/>
+      <circle id="ripple" cx="1080" cy="540" r="74" fill="none" stroke="#00C805" stroke-width="3"/>
+    </svg>
+    <svg class="a" id="check" width="1920" height="1080" style="overflow:visible"><path id="chk" d="M1046 542 L1071 567 L1118 515" fill="none" stroke="#111210" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="a mask h1" id="s9h" style="font-size:150px"><span>Settled.</span></div>
+    <div class="a mask sub" id="s9s1"><span>Two independent sources agree.</span></div>
+    <div class="a mask sub" id="s9s2"><span>Usually within minutes of full time.</span></div>
+    <div class="a label" id="s9fn" style="font-size:18px;letter-spacing:0.1em">Sources disagree? The market is held, never paid out wrong.</div>
+  </div>
+
+  <!-- 10 · accumulator -->
+  <div class="scene" id="s10">
+    <div class="a mask cap" id="s10c"><span>5% of every fee builds the <span class="g">season pot.</span></span></div>
+    <div class="a mask sub" id="s10s"><span>Paid out to the season's top 20 players.</span></div>
+    <div id="mkts" class="layer"></div>
+    <svg class="a" id="ring" width="1920" height="1080" style="overflow:visible">
+      <circle cx="960" cy="640" r="210" fill="none" stroke="rgba(247,245,240,0.08)" stroke-width="20"/>
+      <circle id="arc" cx="960" cy="640" r="210" fill="none" stroke="#00C805" stroke-width="20" stroke-linecap="round" transform="rotate(-90 960 640)"/>
+      <g id="coins"></g>
+    </svg>
+    <div class="a" id="ringTxt" style="text-align:center">
+      <div class="label" style="font-size:17px">Season</div>
+      <div class="h1" style="font-size:58px;margin-top:10px">Accumulator</div>
+      <div class="mono g" style="font-size:22px;margin-top:14px;letter-spacing:0.08em">+5% of every fee</div>
+    </div>
+    <div class="a label" id="ladHd" style="font-size:17px">Season leaderboard · top 20</div>
+    <div class="a" id="ladder" style="width:430px;height:760px"></div>
+  </div>
+
+  <!-- 11 · agent -->
+  <div class="scene" id="s11">
+    <div class="a mask cap" id="s11c"><span>Bring an <span class="p">AI agent.</span></span></div>
+    <div class="a mask sub" id="s11s"><span>Same markets. Same terms. Only you can withdraw.</span></div>
+    <div class="a panel" id="editor" style="width:820px;height:560px;padding:0;overflow:hidden">
+      <div style="height:64px;border-bottom:1px solid rgba(247,245,240,0.08);display:flex;align-items:center;padding-left:28px;gap:12px">
+        <span style="width:14px;height:14px;border-radius:50%;background:rgba(247,245,240,0.15)"></span><span style="width:14px;height:14px;border-radius:50%;background:rgba(247,245,240,0.15)"></span><span style="width:14px;height:14px;border-radius:50%;background:rgba(247,245,240,0.15)"></span>
+        <span class="mono" style="margin-left:22px;font-size:20px;color:rgba(247,245,240,0.8);padding:8px 16px;background:rgba(247,245,240,0.06);border-radius:10px">soul.md</span>
+      </div>
+      <div style="display:flex;padding:34px 0 0 0">
+        <div class="code" style="width:90px;text-align:right;padding-right:26px;color:rgba(107,111,99,0.7)">1
+2
+3
+4
+5</div>
+        <div class="code" id="codeTxt"></div>
+      </div>
+    </div>
+    <div class="a panel" id="agent" style="width:660px;height:560px;padding:40px 44px">
+      <div class="row" style="justify-content:flex-start;gap:22px">
+        <div style="width:76px;height:76px;border-radius:20px;background:linear-gradient(135deg,#7B62F6,#4E3CB5);display:flex;align-items:center;justify-content:center" class="mono"><span style="font-size:26px;font-weight:500">AI</span></div>
+        <div><div class="h1" style="font-size:46px">My agent</div><div class="label" style="font-size:15px;margin-top:8px">Runs on matchday · 5 USDC a pick</div></div>
+        <span class="pill" style="margin-left:auto;background:rgba(123,98,246,0.16);color:#9d8bff">Agent</span>
+      </div>
+      <div id="picks" style="position:relative;margin-top:40px"></div>
+    </div>
+  </div>
+
+  <!-- 12 · every fixture -->
+  <div class="scene" id="s12">
+    <div class="layer" id="marquee" style="transform:rotate(-7deg) scale(1.15)"></div>
+    <div class="layer" id="band" style="background:linear-gradient(180deg, transparent 22%, rgba(17,18,16,0.94) 36%, rgba(17,18,16,0.94) 64%, transparent 78%)"></div>
+    <div class="a mask h1" id="s12a" style="font-size:108px"><span>Every Premier League match.</span></div>
+    <div class="a mask" id="s12b"><span class="fraunces g" style="font-size:104px">Every matchweek.</span></div>
+  </div>
+
+  <!-- 13 · end card -->
+  <div class="scene" id="s13">
+    <div class="a" id="lock2">
+      <svg width="150" height="151" viewBox="0 0 500 502" style="position:absolute;left:0;top:0"><circle cx="400" cy="100" r="100" fill="#00C805"/><path d="M150 0L500 502H327.5L150 251.5V500H0V0H150Z" fill="#F7F5F0"/></svg>
+      <div class="h1" id="word2" style="position:absolute;left:186px;top:-8px;font-size:150px;letter-spacing:-0.035em">kickoff<span class="g">.cash</span></div>
+    </div>
+    <div class="a mask cap" id="s13t" style="font-size:66px"><span>Beat the pack. Keep the stack.</span></div>
+    <div class="a" id="cta" style="background:#00C805;color:#111210;border-radius:999px;padding:24px 52px;font-family:'Clash Display';font-weight:600;font-size:44px;white-space:nowrap;box-shadow:0 0 80px rgba(0,200,5,0.35)">Join the waitlist&nbsp;&nbsp;→</div>
+    <div class="a label" id="disc" style="font-size:16px;letter-spacing:0.12em;color:rgba(107,111,99,0.95)">Testnet season · play money · Illustrative UI · Not financial advice</div>
+  </div>
+
+  <div id="ball"></div>
+  <!-- film grain + vignette are applied in post (mix.sh): full-frame blend layers are too slow to rasterise per frame -->
+</div>
+<script src="node_modules/gsap/dist/gsap.min.js"></script>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.min.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module" src="film.js"></script>
+</body>
+</html>

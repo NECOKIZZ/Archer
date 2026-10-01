@@ -1,0 +1,11 @@
+@font-face{font-family:'Fraunces';font-style:italic;font-weight:300;src:url('Fraunces-italic-300.woff2') format('woff2');}
+@font-face{font-family:'Fraunces';font-style:italic;font-weight:400;src:url('Fraunces-italic-400.woff2') format('woff2');}
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:300;src:url('Fraunces-normal-300.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:300 700;src:url('Inter-normal-300_700.woff2') format('woff2');}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;src:url('JetBrainsMono-normal-400.woff2') format('woff2');}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;src:url('JetBrainsMono-normal-500.woff2') format('woff2');}
+@font-face{font-family:'Clash Display';font-weight:400;src:url('ClashDisplay-400.woff2') format('woff2');}
+@font-face{font-family:'Clash Display';font-weight:500;src:url('ClashDisplay-500.woff2') format('woff2');}
+@font-face{font-family:'Clash Display';font-weight:600;src:url('ClashDisplay-600.woff2') format('woff2');}
+@font-face{font-family:'Clash Display';font-weight:700;src:url('ClashDisplay-700.woff2') format('woff2');}
+@font-face{font-family:'Clash Display';font-weight:900;src:url('ClashDisplay-900.woff2') format('woff2');}
